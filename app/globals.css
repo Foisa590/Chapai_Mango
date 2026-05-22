@@ -113,3 +113,22 @@ body {
     transform: translateY(0);
   }
 }
+
+/* Top promo marquee — pure CSS infinite scroll */
+.marquee-track {
+  animation: marquee 38s linear infinite;
+  will-change: transform;
+}
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+}

@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+import TopMarquee from "@/components/promo/TopMarquee";
 
 /**
  * Wraps the app with public Navbar + Footer, except on /admin routes
@@ -22,6 +23,7 @@ export default function SiteShell({
 
   return (
     <>
+      <TopMarquee />
       <Navbar />
       <main className="page-enter">{children}</main>
       <Footer />

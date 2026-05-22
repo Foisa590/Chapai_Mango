@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { AlertTriangle, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { useCart } from "@/store/cart-store";
 import { formatBDT } from "@/lib/utils";
-import { calcDeliveryFee, config } from "@/lib/config";
+import { calcDeliveryFee, config, totalCartKg } from "@/lib/config";
 
 export default function CartView() {
   const items = useCart((s) => s.items);
@@ -30,6 +30,10 @@ export default function CartView() {
 
   const deliveryFee = calcDeliveryFee(subtotal);
   const total = subtotal + deliveryFee;
+  const totalKg = totalCartKg(items);
+  const meetsMinimum = totalKg >= config.minOrderKg;
+  const kgShort = Math.max(0, config.minOrderKg - totalKg);
+
   // Show the "buy ৳X more for free delivery" hint only when there's a
   // chargeable fee that would still flip to free above some threshold.
   const showFreeDeliveryHint =
@@ -114,9 +118,29 @@ export default function CartView() {
         <div className="my-4 border-t border-mango-200/60" />
         <Row label="মোট" value={formatBDT(total)} bold />
 
-        <Link href="/checkout" className="btn-primary w-full mt-6">
-          চেকআউট
-        </Link>
+        {!meetsMinimum && config.minOrderKg > 0 && (
+          <div className="mt-4 rounded-2xl bg-amber-50 border border-amber-200 p-3 flex gap-2">
+            <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+            <p className="text-xs text-amber-800 leading-relaxed">
+              ন্যূনতম অর্ডার {config.minOrderKg} কেজি — কার্টে আরও{" "}
+              <strong>{kgShort} কেজি</strong> যোগ করুন।
+            </p>
+          </div>
+        )}
+
+        {meetsMinimum ? (
+          <Link href="/checkout" className="btn-primary w-full mt-6">
+            চেকআউট
+          </Link>
+        ) : (
+          <button
+            disabled
+            className="btn-primary w-full mt-6 cursor-not-allowed"
+            aria-disabled="true"
+          >
+            চেকআউট ({totalKg}/{config.minOrderKg} কেজি)
+          </button>
+        )}
         <Link
           href="/products"
           className="block text-center mt-3 text-xs text-ink/60 hover:text-mango-700"

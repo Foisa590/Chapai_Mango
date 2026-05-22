@@ -114,8 +114,21 @@ export default function Footer() {
       </div>
 
       <div className="border-t border-mango-200/50">
-        <div className="container-x py-5 text-center text-xs text-ink/60">
-          © {new Date().getFullYear()} Chapai Mango House · বাংলাদেশে তৈরি 🥭
+        <div className="container-x py-5 flex flex-wrap items-center justify-between gap-3 text-xs text-ink/60">
+          <div>
+            © {new Date().getFullYear()} Chapai Mango House · বাংলাদেশে তৈরি 🥭
+          </div>
+          <div>
+            Developed by{" "}
+            <a
+              href="https://www.facebook.com/foysal.iqbal.359"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-mango-700 hover:text-mango-600 transition underline-offset-2 hover:underline"
+            >
+              MD FOISAL IQBAL
+            </a>
+          </div>
         </div>
       </div>
     </footer>
