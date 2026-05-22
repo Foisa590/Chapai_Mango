@@ -72,30 +72,106 @@ create table if not exists public.contact_messages (
 );
 
 -- ============================================================
--- Row Level Security
+-- Permissions + Row Level Security
 -- ============================================================
+-- Both pieces are required: GRANT lets the role see the table at
+-- all, and the policy decides which rows it can read/write.
+-- ============================================================
+
 alter table public.products          enable row level security;
 alter table public.orders            enable row level security;
 alter table public.testimonials      enable row level security;
 alter table public.contact_messages  enable row level security;
 
--- Public read for products + testimonials
-drop policy if exists "products read" on public.products;
-create policy "products read" on public.products
-  for select using (true);
+grant usage on schema public to anon, authenticated;
 
-drop policy if exists "testimonials read" on public.testimonials;
-create policy "testimonials read" on public.testimonials
-  for select using (true);
+grant insert, select on public.orders           to anon, authenticated;
+grant insert         on public.contact_messages to anon, authenticated;
+grant select         on public.products         to anon, authenticated;
+grant select         on public.testimonials     to anon, authenticated;
 
--- Anyone can place an order / send a contact message (insert only)
-drop policy if exists "orders insert" on public.orders;
-create policy "orders insert" on public.orders
-  for insert with check (true);
+grant update, delete on public.orders           to authenticated;
+grant update, delete on public.contact_messages to authenticated;
+grant insert, update, delete on public.products to authenticated;
+grant insert, update, delete on public.testimonials to authenticated;
 
-drop policy if exists "contact insert" on public.contact_messages;
-create policy "contact insert" on public.contact_messages
-  for insert with check (true);
+-- ---------- Policies (drop + recreate, idempotent) ----------
+
+-- Orders: any visitor places an order, admin manages all.
+drop policy if exists "orders public insert" on public.orders;
+drop policy if exists "orders admin all"     on public.orders;
+drop policy if exists "orders insert"        on public.orders;
+drop policy if exists "auth all orders"      on public.orders;
+
+create policy "orders public insert"
+  on public.orders
+  for insert
+  to anon, authenticated
+  with check (true);
+
+create policy "orders admin all"
+  on public.orders
+  for all
+  to authenticated
+  using (true)
+  with check (true);
+
+-- Contact messages: any visitor submits, admin reads/manages.
+drop policy if exists "contact public insert" on public.contact_messages;
+drop policy if exists "contact admin all"     on public.contact_messages;
+drop policy if exists "contact insert"        on public.contact_messages;
+drop policy if exists "auth all contact"      on public.contact_messages;
+
+create policy "contact public insert"
+  on public.contact_messages
+  for insert
+  to anon, authenticated
+  with check (true);
+
+create policy "contact admin all"
+  on public.contact_messages
+  for all
+  to authenticated
+  using (true)
+  with check (true);
+
+-- Products: public read, admin write.
+drop policy if exists "products public read" on public.products;
+drop policy if exists "products admin all"   on public.products;
+drop policy if exists "products read"        on public.products;
+drop policy if exists "auth all products"    on public.products;
+
+create policy "products public read"
+  on public.products
+  for select
+  to anon, authenticated
+  using (true);
+
+create policy "products admin all"
+  on public.products
+  for all
+  to authenticated
+  using (true)
+  with check (true);
+
+-- Testimonials: public read, admin write.
+drop policy if exists "testimonials public read" on public.testimonials;
+drop policy if exists "testimonials admin all"   on public.testimonials;
+drop policy if exists "testimonials read"        on public.testimonials;
+drop policy if exists "auth all testimonials"    on public.testimonials;
+
+create policy "testimonials public read"
+  on public.testimonials
+  for select
+  to anon, authenticated
+  using (true);
+
+create policy "testimonials admin all"
+  on public.testimonials
+  for all
+  to authenticated
+  using (true)
+  with check (true);
 
 -- ============================================================
 -- Seed data (Bengali)
@@ -152,37 +228,3 @@ insert into public.testimonials (name, location, message, rating) values
   ('নুসরাত জাহান', 'চট্টগ্রাম', 'ক্ষীরসাপাতের স্বাদ একদম চাঁপাইয়ের মতো — যত দিন থাকব Chapai Mango House থেকেই নেব।', 5),
   ('তানভীর আহমেদ', 'সিলেট', 'দাম রিজনেবল, ডেলিভারি ফাস্ট। পরিবারের জন্য গিফট হিসেবে পাঠিয়েছিলাম, সবাই খুশি।', 5)
 on conflict do nothing;
-
--- ============================================================
--- Admin policies (authenticated users)
--- ============================================================
--- Any user authenticated via Supabase Auth gets full access.
--- Create your admin user in: Supabase Dashboard -> Authentication -> Users -> Add user
-
--- Products
-drop policy if exists "auth all products" on public.products;
-create policy "auth all products" on public.products
-  for all
-  using (auth.uid() is not null)
-  with check (auth.uid() is not null);
-
--- Orders
-drop policy if exists "auth all orders" on public.orders;
-create policy "auth all orders" on public.orders
-  for all
-  using (auth.uid() is not null)
-  with check (auth.uid() is not null);
-
--- Testimonials
-drop policy if exists "auth all testimonials" on public.testimonials;
-create policy "auth all testimonials" on public.testimonials
-  for all
-  using (auth.uid() is not null)
-  with check (auth.uid() is not null);
-
--- Contact messages
-drop policy if exists "auth all contact" on public.contact_messages;
-create policy "auth all contact" on public.contact_messages
-  for all
-  using (auth.uid() is not null)
-  with check (auth.uid() is not null);
