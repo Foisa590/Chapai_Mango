@@ -4,12 +4,14 @@ export default function NotFound() {
   return (
     <section className="container-x py-24 text-center">
       <div className="text-7xl mb-4">🥭</div>
-      <h1 className="font-display text-4xl font-bold">Aam ta khuje pailam na</h1>
+      <h1 className="font-display-bn text-3xl sm:text-4xl font-bold">
+        আমটি খুঁজে পাইনি
+      </h1>
       <p className="mt-2 text-ink/60">
-        Ei product ekhono nai othoba slug bhul.
+        এই পণ্যটি এখনো নেই অথবা লিঙ্কে কিছু ভুল আছে।
       </p>
       <Link href="/products" className="btn-primary mt-6 inline-flex">
-        Shop-e firun
+        শপে ফিরে যান
       </Link>
     </section>
   );

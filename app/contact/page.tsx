@@ -2,24 +2,27 @@ import { Phone, Mail, MapPin, Clock } from "lucide-react";
 import ContactForm from "@/components/contact/ContactForm";
 
 export const metadata = {
-  title: "Contact — Chapai Mango",
-  description: "Amader sathe jogajog korun — order, delivery, ba ono kichu."
+  title: "যোগাযোগ — Chapai Mango House",
+  description:
+    "Chapai Mango House-এর সাথে যোগাযোগ করুন — অর্ডার, ডেলিভারি বা যে কোনো প্রশ্নে।"
 };
 
 export default function ContactPage() {
   const phone = process.env.NEXT_PUBLIC_BUSINESS_PHONE || "+880 1XXX-XXXXXX";
-  const email = process.env.NEXT_PUBLIC_BUSINESS_EMAIL || "hello@chapaimango.com";
+  const email =
+    process.env.NEXT_PUBLIC_BUSINESS_EMAIL || "hello@chapaimangohouse.com";
 
   return (
     <>
       <section className="bg-hero-radial">
         <div className="container-x py-16 text-center max-w-3xl mx-auto">
-          <p className="text-sm font-semibold text-mango-600 mb-2">━ Contact</p>
-          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
-            Amader sathe <span className="shimmer-text">jogajog korun</span>
+          <p className="text-sm font-semibold text-mango-600 mb-2">━ যোগাযোগ</p>
+          <h1 className="font-display-bn text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
+            আমাদের সাথে <span className="shimmer-text">যোগাযোগ করুন</span>
           </h1>
-          <p className="mt-5 text-ink/70 text-lg">
-            Order, delivery, ba ono kichu — amra ache i. Phone, email, ba form.
+          <p className="mt-5 text-ink/70 text-base sm:text-lg">
+            অর্ডার, ডেলিভারি বা যে কোনো প্রশ্ন — আমরা সবসময় পাশে আছি। ফোন,
+            ইমেইল অথবা ফর্ম পূরণ করুন।
           </p>
         </div>
       </section>
@@ -28,48 +31,48 @@ export default function ContactPage() {
         <div className="space-y-4">
           <InfoCard
             icon={<Phone className="h-5 w-5" />}
-            title="Phone / WhatsApp"
+            title="ফোন / WhatsApp"
             value={phone}
             href={`tel:${phone}`}
           />
           <InfoCard
             icon={<Mail className="h-5 w-5" />}
-            title="Email"
+            title="ইমেইল"
             value={email}
             href={`mailto:${email}`}
           />
           <InfoCard
             icon={<MapPin className="h-5 w-5" />}
-            title="Bagan / Office"
-            value="Chapainawabganj, Rajshahi, Bangladesh"
+            title="বাগান / অফিস"
+            value="নিজামপুর, নাচোল, চাঁপাইনবাবগঞ্জ, রাজশাহী, বাংলাদেশ"
           />
           <InfoCard
             icon={<Clock className="h-5 w-5" />}
-            title="Customer support"
-            value="Shokal 9 — Rat 9 (Daily)"
+            title="কাস্টমার সাপোর্ট"
+            value="সকাল ৯টা — রাত ৯টা (প্রতিদিন)"
           />
         </div>
 
         <div className="lg:col-span-2 glass rounded-3xl p-6 sm:p-8">
-          <h2 className="font-display text-2xl font-bold mb-1">
-            Message likhun
+          <h2 className="font-display-bn text-xl sm:text-2xl font-bold mb-1">
+            মেসেজ লিখুন
           </h2>
           <p className="text-sm text-ink/60 mb-6">
-            Form fill up korle amra 24 ghonta-r moddhe contact korbo.
+            ফর্ম পূরণ করলে আমরা ২৪ ঘণ্টার মধ্যে যোগাযোগ করব।
           </p>
           <ContactForm />
         </div>
       </section>
 
-      {/* Map embed (Chapainawabganj) */}
+      {/* Map embed (Nachole, Chapainawabganj) */}
       <section className="container-x pb-16">
         <div className="rounded-3xl overflow-hidden glass">
           <iframe
-            src="https://www.google.com/maps?q=Chapainawabganj,Bangladesh&output=embed"
+            src="https://www.google.com/maps?q=Nijampur,Nachole,Chapainawabganj,Bangladesh&output=embed"
             className="w-full h-[360px] border-0"
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
-            title="Chapainawabganj location"
+            title="নিজামপুর, নাচোল, চাঁপাইনবাবগঞ্জ"
           />
         </div>
       </section>
@@ -94,11 +97,11 @@ function InfoCard({
         <div className="grid place-items-center h-10 w-10 rounded-xl bg-mango-gradient shrink-0">
           {icon}
         </div>
-        <div>
+        <div className="min-w-0">
           <div className="text-xs uppercase tracking-wider font-semibold text-mango-600">
             {title}
           </div>
-          <div className="text-sm font-medium text-ink mt-1 break-all">
+          <div className="text-sm font-medium text-ink mt-1 break-words">
             {value}
           </div>
         </div>

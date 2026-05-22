@@ -13,10 +13,10 @@ export default function Testimonials({
     <section className="container-x py-20 sm:py-24">
       <div className="text-center mb-12 max-w-2xl mx-auto">
         <p className="text-sm font-semibold text-mango-600 mb-2">
-          ━ Customer Reviews
+          ━ গ্রাহকের মতামত
         </p>
         <h2 className="section-title">
-          Manush ki <span className="shimmer-text">bolche</span>
+          মানুষ কী <span className="shimmer-text">বলছে</span>
         </h2>
       </div>
 
@@ -40,9 +40,11 @@ export default function Testimonials({
                   />
                 ))}
               </div>
-              <p className="text-ink/80 leading-relaxed">&ldquo;{t.message}&rdquo;</p>
+              <p className="text-ink/80 leading-relaxed">
+                &ldquo;{t.message}&rdquo;
+              </p>
               <div className="mt-5 pt-4 border-t border-mango-200/60">
-                <div className="font-display text-base font-semibold text-ink">
+                <div className="font-display-bn text-base font-semibold text-ink">
                   {t.name}
                 </div>
                 <div className="text-xs text-ink/50">{t.location}</div>

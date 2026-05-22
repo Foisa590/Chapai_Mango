@@ -1,5 +1,7 @@
 import type { Mango, Testimonial } from "@/types";
 
+const ORIGIN = "নিজামপুর, নাচোল, চাঁপাইনবাবগঞ্জ, বাংলাদেশ";
+
 /**
  * Fallback data used when Supabase env vars are not yet configured.
  * Same data is also seeded into Supabase via supabase/schema.sql.
@@ -7,7 +9,7 @@ import type { Mango, Testimonial } from "@/types";
 export const MOCK_PRODUCTS: Mango[] = [
   {
     id: "1",
-    name: "Premium Himsagar",
+    name: "প্রিমিয়াম হিমসাগর",
     slug: "himsagar",
     variety: "Himsagar",
     price_per_kg: 180,
@@ -16,35 +18,33 @@ export const MOCK_PRODUCTS: Mango[] = [
       "https://images.unsplash.com/photo-1591073113125-e46713c829ed?w=1200",
       "https://images.unsplash.com/photo-1553279768-865429fa0078?w=1200"
     ],
-    short_description: "Bangla aam-er raja — mishti, rosalo, sugondhi.",
+    short_description: "বাংলা আমের রাজা — মিষ্টি, রসালো, সুগন্ধি।",
     description:
-      "Chapainawabganj-er gachpaka Himsagar. Atish moshrin shansh, kom shoror sathe oshadharon mishti shoad. Ekbar khele bar bar mone porbe.",
+      "চাঁপাইনবাবগঞ্জের গাছপাকা হিমসাগর। আঁশহীন মসৃণ শাঁস, কম শাঁসে অসাধারণ মিষ্টি স্বাদ। একবার খেলে বারবার মনে পড়বে।",
     is_featured: true,
     rating: 4.9,
-    origin: "Chapainawabganj, Bangladesh",
-    season: "May - June"
+    origin: ORIGIN,
+    season: "মে – জুন"
   },
   {
     id: "2",
-    name: "Langra (Banarasi)",
+    name: "ল্যাংড়া (বানারসি)",
     slug: "langra",
     variety: "Langra",
     price_per_kg: 200,
     stock_kg: 400,
-    images: [
-      "https://images.unsplash.com/photo-1553279768-865429fa0078?w=1200"
-    ],
-    short_description: "Sobuj-soneela rong, oshamanno mishti aam.",
+    images: ["https://images.unsplash.com/photo-1553279768-865429fa0078?w=1200"],
+    short_description: "সবুজ-সোনালি রঙ, অসাধারণ মিষ্টি আম।",
     description:
-      "Banarasi heritage variety — patla khosha, motkar moto motkar shansh. Chapai-er mati ar abhawate je Langra hoy ta dunia-bikhyato.",
+      "বানারসি হেরিটেজ জাত — পাতলা খোসা, মাখনের মতো নরম শাঁস। চাঁপাইয়ের মাটি ও আবহাওয়ায় ল্যাংড়া দুনিয়াবিখ্যাত।",
     is_featured: true,
     rating: 4.8,
-    origin: "Chapainawabganj, Bangladesh",
-    season: "June - July"
+    origin: ORIGIN,
+    season: "জুন – জুলাই"
   },
   {
     id: "3",
-    name: "Khirsapat (Khirshapati)",
+    name: "ক্ষীরসাপাত",
     slug: "khirsapat",
     variety: "Khirsapat",
     price_per_kg: 220,
@@ -52,17 +52,17 @@ export const MOCK_PRODUCTS: Mango[] = [
     images: [
       "https://images.unsplash.com/photo-1605027990121-cbae9e0642df?w=1200"
     ],
-    short_description: "GI tag pawa Chapai-er gourab.",
+    short_description: "GI ট্যাগ পাওয়া চাঁপাইয়ের গৌরব।",
     description:
-      "Geographical Indication (GI) registered Khirsapat — surokkhito heritage. Khub mishti, holud moromer shansh, fiber-mukto.",
+      "Geographical Indication (GI) নিবন্ধিত ক্ষীরসাপাত — সংরক্ষিত ঐতিহ্য। অত্যন্ত মিষ্টি, হলুদ মাখনের মতো শাঁস, ফাইবার-মুক্ত।",
     is_featured: true,
     rating: 5.0,
-    origin: "Chapainawabganj, Bangladesh",
-    season: "May - July"
+    origin: ORIGIN,
+    season: "মে – জুলাই"
   },
   {
     id: "4",
-    name: "Fazli",
+    name: "ফজলি",
     slug: "fazli",
     variety: "Fazli",
     price_per_kg: 150,
@@ -70,17 +70,17 @@ export const MOCK_PRODUCTS: Mango[] = [
     images: [
       "https://images.unsplash.com/photo-1596591868231-05e808fd5ec2?w=1200"
     ],
-    short_description: "Boro size, late season — pickle ar kheer-er jonno best.",
+    short_description: "বড় সাইজ, লেট সিজন — আচার ও ক্ষীরের জন্য সেরা।",
     description:
-      "Mostly 700g - 1.2kg per piece. Late-season aam (July-August). Achar, jam, ar pakai khaowar jonno excellent.",
+      "প্রতি ফল ৭০০গ্রাম–১.২ কেজি। লেট-সিজন আম (জুলাই–আগস্ট)। আচার, জ্যাম, ও পাকা খাওয়ার জন্য চমৎকার।",
     is_featured: false,
     rating: 4.6,
-    origin: "Chapainawabganj, Bangladesh",
-    season: "July - August"
+    origin: ORIGIN,
+    season: "জুলাই – আগস্ট"
   },
   {
     id: "5",
-    name: "Amrapali",
+    name: "আম্রপালি",
     slug: "amrapali",
     variety: "Amrapali",
     price_per_kg: 170,
@@ -88,17 +88,17 @@ export const MOCK_PRODUCTS: Mango[] = [
     images: [
       "https://images.unsplash.com/photo-1631534179872-2b7a577b1ba2?w=1200"
     ],
-    short_description: "Hybrid variety — choto, ghono mishti, fiber-less.",
+    short_description: "হাইব্রিড জাত — ছোট, ঘন মিষ্টি, ফাইবার-মুক্ত।",
     description:
-      "Dashehari + Neelum-er hybrid. Khub mishti, fiber kom, lal-holud rong. Choto family-r jonno perfect.",
+      "দশেহারি + নিলাম-এর হাইব্রিড। অত্যন্ত মিষ্টি, ফাইবার কম, লাল-হলুদ রঙ। ছোট পরিবারের জন্য পারফেক্ট।",
     is_featured: false,
     rating: 4.7,
-    origin: "Chapainawabganj, Bangladesh",
-    season: "June - July"
+    origin: ORIGIN,
+    season: "জুন – জুলাই"
   },
   {
     id: "6",
-    name: "Gopalbhog",
+    name: "গোপালভোগ",
     slug: "gopalbhog",
     variety: "Gopalbhog",
     price_per_kg: 160,
@@ -106,39 +106,39 @@ export const MOCK_PRODUCTS: Mango[] = [
     images: [
       "https://images.unsplash.com/photo-1605027990121-cbae9e0642df?w=1200"
     ],
-    short_description: "Early season aam — May-er prothome paben.",
+    short_description: "সিজনের প্রথম আম — মে মাসের শুরুতেই পাবেন।",
     description:
-      "Season-er prothom aam. Chamra patla, sugondh kara, mishti-tok balance. Ramadan/Eid-er prio aam.",
+      "মৌসুমের প্রথম আম। চামড়া পাতলা, সুগন্ধে ভরা, মিষ্টি-টক ব্যালান্স। রমজান/ঈদের প্রিয় আম।",
     is_featured: false,
     rating: 4.5,
-    origin: "Chapainawabganj, Bangladesh",
-    season: "May"
+    origin: ORIGIN,
+    season: "মে"
   }
 ];
 
 export const MOCK_TESTIMONIALS: Testimonial[] = [
   {
     id: "t1",
-    name: "Rashed Khan",
-    location: "Dhaka",
+    name: "রাশেদ খান",
+    location: "ঢাকা",
     message:
-      "Eto fresh aam onek diner por pelam. Packaging ekdom safe, ekta o nosto hoyni. Insha Allah abar order korbo.",
+      "অনেক দিন পর এত ফ্রেশ আম পেলাম। প্যাকেজিং একদম সেফ, একটাও নষ্ট হয়নি। ইনশাআল্লাহ আবার অর্ডার করব।",
     rating: 5
   },
   {
     id: "t2",
-    name: "Nusrat Jahan",
-    location: "Chittagong",
+    name: "নুসরাত জাহান",
+    location: "চট্টগ্রাম",
     message:
-      "Khirsapat-er shoad ekdom Chapai-er mato — joto din thakbo Chapai Mango theke i nibo.",
+      "ক্ষীরসাপাতের স্বাদ একদম চাঁপাইয়ের মতো — যত দিন থাকব Chapai Mango House থেকেই নেব।",
     rating: 5
   },
   {
     id: "t3",
-    name: "Tanvir Ahmed",
-    location: "Sylhet",
+    name: "তানভীর আহমেদ",
+    location: "সিলেট",
     message:
-      "Price reasonable, delivery fast. Family ke gift hisebe pathiyechilam, shobai khushi.",
+      "দাম রিজনেবল, ডেলিভারি ফাস্ট। পরিবারের জন্য গিফট হিসেবে পাঠিয়েছিলাম, সবাই খুশি।",
     rating: 5
   }
 ];

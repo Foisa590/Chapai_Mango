@@ -296,6 +296,16 @@ The admin area uses its own sidebar layout (no public navbar) and is fully respo
 
 If you set up Supabase before this admin update, re-run [`supabase/schema.sql`](./supabase/schema.sql) (it's idempotent — `drop policy if exists` + `create policy`). The bottom block adds the admin policies that authorize logged-in users to update/delete orders, manage products, etc.
 
+### Migrating existing seeded products to Bengali
+
+The seed in `schema.sql` uses `ON CONFLICT (slug) DO NOTHING`, so re-running it does **not** translate already-inserted English rows. If your Supabase project still shows English product names like "Premium Himsagar" instead of "প্রিমিয়াম হিমসাগর", run the migration once:
+
+1. Open Supabase **SQL Editor → New query**
+2. Paste the contents of [`supabase/migrate-bangla.sql`](./supabase/migrate-bangla.sql)
+3. Click **Run** — products + testimonials are translated, origin updated to Nijampur, Nachole
+
+The script is safe to run multiple times.
+
 ### Sign in
 
 1. Run the dev server (`npm run dev`)
