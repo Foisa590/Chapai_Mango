@@ -314,8 +314,59 @@ The script is safe to run multiple times.
 4. Sign in with the email + password you created in Supabase
 5. You'll land on the dashboard
 
-### Security notes
+---
 
-- The dashboard relies on Supabase Auth + RLS policies — there's no separate `is_admin` flag. Anyone who can log in can manage everything. For a single business this is usually fine; for a multi-staff setup add a `profiles.role` column and tighten RLS to `role = 'admin'`.
-- The admin area is excluded from search engines (`robots: { index: false }`).
-- Admin pages are server-rendered with `dynamic = "force-dynamic"` so changes appear immediately without revalidation lag.
+## 👤 Customer Auth + Order History
+
+Customers must now **sign up / sign in** before they can place an order, and they get a personal **order history page** at `/orders`.
+
+### Pages
+
+| URL | What |
+|---|---|
+| `/signup` | Create a customer account (full name, phone, email, password) |
+| `/login` | Sign in with email + password (auto-redirects to `/orders` or `?next=`) |
+| `/orders` | The signed-in customer's personal order history |
+
+The navbar shows a **circular initial avatar** when signed in. Tapping it opens a menu with:
+- আমার অর্ডার (My Orders)
+- অ্যাডমিন প্যানেল (only visible if the user's email is in `admin_emails`)
+- সাইন আউট (Sign out)
+
+### Run the customer-auth migration (one-time)
+
+1. **Supabase Dashboard → SQL Editor → + New query**
+2. Paste the contents of [`supabase/customer-auth.sql`](./supabase/customer-auth.sql) and **Run**.
+3. **Add your admin email** (without this, `/admin/*` will reject every login):
+
+```sql
+insert into public.admin_emails (email)
+values ('your-admin@email.com')   -- ⬅️ replace with your real admin email
+on conflict do nothing;
+```
+
+The script:
+- Adds a `user_id` column to `orders` linking each order to a Supabase Auth user
+- Creates an `admin_emails` whitelist + `is_admin()` helper function
+- Replaces the old "anyone can insert" policies with auth-required policies:
+  - **Customer:** can insert and read **only their own** orders
+  - **Admin (whitelisted email):** full read/update/delete access
+- Tightens `contact_messages`: anyone can submit, only admin can read/manage
+
+### How the flow now works
+
+1. Customer hits **Checkout** → middleware redirects to `/login` if not signed in
+2. Customer signs up at `/signup` (or signs in) → returns to checkout
+3. Order insert sets `user_id = auth.uid()` so it ties to the customer
+4. After "অর্ডার কনফার্ম!" the customer can visit `/orders` to see history
+5. Admin still uses `/admin/login` and lands at `/admin` for the dashboard
+
+### Disabling email confirmation (recommended for low-friction signup)
+
+By default Supabase requires email confirmation before a new user can sign in. To let customers order immediately after signup:
+
+1. Supabase Dashboard → **Authentication → Providers → Email**
+2. Turn **off** "Confirm email"
+3. Save
+
+(If you want to keep confirmation on for security, the signup form already shows a "check your inbox" message instead of redirecting.)

@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Menu, ShoppingBag, X } from "lucide-react";
+import { LogIn, Menu, ShoppingBag, X } from "lucide-react";
 import { useCart } from "@/store/cart-store";
 import { cn } from "@/lib/utils";
+import UserMenu from "./UserMenu";
 
 const NAV = [
   { href: "/", label: "হোম" },
@@ -37,10 +38,12 @@ export default function Navbar() {
           : "bg-transparent"
       )}
     >
-      <div className="container-x flex h-16 sm:h-20 items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group">
-          <span className="text-3xl group-hover:animate-float">🥭</span>
-          <span className="font-display text-base sm:text-xl font-bold text-ink leading-tight">
+      <div className="container-x flex h-16 sm:h-20 items-center justify-between gap-2">
+        <Link href="/" className="flex items-center gap-2 group min-w-0">
+          <span className="text-2xl sm:text-3xl group-hover:animate-float">
+            🥭
+          </span>
+          <span className="font-display text-sm sm:text-xl font-bold text-ink leading-tight truncate">
             Chapai <span className="shimmer-text">Mango</span> House
           </span>
         </Link>
@@ -69,7 +72,9 @@ export default function Navbar() {
           })}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <UserMenu />
+
           <Link
             href="/cart"
             className="relative rounded-full bg-white/70 p-2.5 border border-mango-200 hover:bg-mango-100 transition"
@@ -110,6 +115,14 @@ export default function Navbar() {
                 {item.label}
               </Link>
             ))}
+            <Link
+              href="/login"
+              onClick={() => setOpen(false)}
+              className="py-3 text-base font-medium text-mango-700 inline-flex items-center gap-2 sm:hidden"
+            >
+              <LogIn className="h-4 w-4" />
+              সাইন ইন
+            </Link>
           </nav>
         </div>
       )}

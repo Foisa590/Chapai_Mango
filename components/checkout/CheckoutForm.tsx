@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -18,6 +18,7 @@ import { useCart } from "@/store/cart-store";
 import { formatBDT } from "@/lib/utils";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import type { PaymentMethod } from "@/types";
+import type { User } from "@supabase/supabase-js";
 
 const DISTRICTS = [
   "Dhaka",
@@ -64,6 +65,7 @@ export default function CheckoutForm() {
   const clear = useCart((s) => s.clear);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState<{ id?: string } | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   const deliveryFee = subtotal >= 2000 ? 0 : 120;
   const total = subtotal + deliveryFee;
@@ -72,11 +74,35 @@ export default function CheckoutForm() {
     register,
     handleSubmit,
     watch,
+    reset,
     formState: { errors }
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { payment_method: "cod" }
   });
+
+  // Pull the signed-in user (server already redirected unauthed visitors to
+  // /login). Pre-fill name/phone from sign-up metadata.
+  useEffect(() => {
+    if (!isSupabaseConfigured()) return;
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      const u = data.user;
+      setUser(u);
+      if (u) {
+        reset((prev) => ({
+          ...prev,
+          customer_name:
+            (u.user_metadata?.full_name as string | undefined) ||
+            prev.customer_name ||
+            "",
+          phone:
+            (u.user_metadata?.phone as string | undefined) || prev.phone || "",
+          email: u.email || prev.email || ""
+        }));
+      }
+    });
+  }, [reset]);
 
   const method = watch("payment_method") as PaymentMethod;
 
@@ -96,12 +122,18 @@ export default function CheckoutForm() {
       router.push("/products");
       return;
     }
+    if (isSupabaseConfigured() && !user) {
+      toast.error("অর্ডার করতে সাইন ইন করুন");
+      router.push("/login?next=/checkout");
+      return;
+    }
     setSubmitting(true);
     try {
       const orderPayload = {
+        user_id: user?.id ?? null,
         customer_name: values.customer_name,
         phone: values.phone,
-        email: values.email || null,
+        email: values.email || user?.email || null,
         address: values.address,
         district: values.district,
         items,

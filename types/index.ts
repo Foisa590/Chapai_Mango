@@ -28,6 +28,7 @@ export type PaymentMethod = "cod" | "bkash" | "nagad" | "rocket";
 
 export type Order = {
   id?: string;
+  user_id?: string | null;
   customer_name: string;
   phone: string;
   email?: string;

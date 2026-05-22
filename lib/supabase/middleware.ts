@@ -3,6 +3,15 @@ import { NextResponse, type NextRequest } from "next/server";
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
+const ADMIN_PREFIX = "/admin";
+const ADMIN_LOGIN = "/admin/login";
+
+// Customer pages that require any signed-in user.
+const CUSTOMER_PROTECTED = ["/checkout", "/orders"];
+
+// Customer auth pages — signed-in users are bounced away from these.
+const CUSTOMER_AUTH_PAGES = ["/login", "/signup"];
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -41,21 +50,45 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
-  const isAdminRoute = path.startsWith("/admin");
-  const isLoginRoute = path.startsWith("/admin/login");
+  const isAdminRoute = path.startsWith(ADMIN_PREFIX);
+  const isAdminLogin = path === ADMIN_LOGIN;
+  const isCustomerProtected = CUSTOMER_PROTECTED.some(
+    (p) => path === p || path.startsWith(p + "/")
+  );
+  const isCustomerAuth = CUSTOMER_AUTH_PAGES.includes(path);
 
-  // Block /admin/* (except /admin/login) without a session
-  if (isAdminRoute && !isLoginRoute && !user) {
+  // 1) /admin/* (except /admin/login) requires an authenticated session.
+  //    Admin role is enforced inside app/admin/layout.tsx via is_admin().
+  if (isAdminRoute && !isAdminLogin && !user) {
     const url = request.nextUrl.clone();
-    url.pathname = "/admin/login";
+    url.pathname = ADMIN_LOGIN;
     url.searchParams.set("next", path);
     return NextResponse.redirect(url);
   }
 
-  // Already logged in -> bounce away from /admin/login to dashboard
-  if (isLoginRoute && user) {
+  // 2) Already logged in -> bounce away from /admin/login.
+  if (isAdminLogin && user) {
     const url = request.nextUrl.clone();
-    url.pathname = "/admin";
+    url.pathname = ADMIN_PREFIX;
+    url.searchParams.delete("next");
+    return NextResponse.redirect(url);
+  }
+
+  // 3) /checkout and /orders require a signed-in customer.
+  if (isCustomerProtected && !user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.searchParams.set("next", path);
+    return NextResponse.redirect(url);
+  }
+
+  // 4) Already logged in -> /login and /signup redirect to /orders.
+  if (isCustomerAuth && user) {
+    const url = request.nextUrl.clone();
+    url.pathname =
+      typeof request.nextUrl.searchParams.get("next") === "string"
+        ? request.nextUrl.searchParams.get("next") || "/orders"
+        : "/orders";
     url.searchParams.delete("next");
     return NextResponse.redirect(url);
   }
