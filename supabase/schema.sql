@@ -146,3 +146,38 @@ insert into public.testimonials (name, location, message, rating) values
   ('Nusrat Jahan', 'Chittagong', 'Khirsapat-er shoad ekdom Chapai-er mato — joto din thakbo Chapai Mango theke i nibo.', 5),
   ('Tanvir Ahmed', 'Sylhet', 'Price reasonable, delivery fast. Family ke gift hisebe pathiyechilam, shobai khushi.', 5)
 on conflict do nothing;
+
+
+-- ============================================================
+-- Admin policies (authenticated users)
+-- ============================================================
+-- Any user authenticated via Supabase Auth gets full access.
+-- Create your admin user in: Supabase Dashboard -> Authentication -> Users -> Add user
+
+-- Products
+drop policy if exists "auth all products" on public.products;
+create policy "auth all products" on public.products
+  for all
+  using (auth.uid() is not null)
+  with check (auth.uid() is not null);
+
+-- Orders
+drop policy if exists "auth all orders" on public.orders;
+create policy "auth all orders" on public.orders
+  for all
+  using (auth.uid() is not null)
+  with check (auth.uid() is not null);
+
+-- Testimonials
+drop policy if exists "auth all testimonials" on public.testimonials;
+create policy "auth all testimonials" on public.testimonials
+  for all
+  using (auth.uid() is not null)
+  with check (auth.uid() is not null);
+
+-- Contact messages
+drop policy if exists "auth all contact" on public.contact_messages;
+create policy "auth all contact" on public.contact_messages
+  for all
+  using (auth.uid() is not null)
+  with check (auth.uid() is not null);

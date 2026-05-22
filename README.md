@@ -211,3 +211,54 @@ Chapai_Mango/
 ## 📜 License
 
 Private — © Chapai Mango. All rights reserved.
+
+
+---
+
+## 🛠️ Admin Dashboard
+
+A full admin dashboard ships at **`/admin`** — protected by Supabase Auth.
+
+### Features
+
+| Section | URL | What you can do |
+|---|---|---|
+| Login | `/admin/login` | Email + password sign-in |
+| Dashboard | `/admin` | Total orders, pending count, revenue, products, recent orders, quick actions |
+| Orders | `/admin/orders` | Filter by status tabs (pending / confirmed / shipped / delivered / cancelled), table view |
+| Order detail | `/admin/orders/[id]` | View customer info, items, payment + TrxID, change status, delete |
+| Products | `/admin/products` | Card grid with image + price + stock, Edit, Delete |
+| New product | `/admin/products/new` | Add a new mango variety (multi-image, featured toggle) |
+| Edit product | `/admin/products/[id]/edit` | Update existing product |
+| Messages | `/admin/messages` | Read contact-form submissions, click-to-reply via email/phone, delete |
+
+The admin area uses its own sidebar layout (no public navbar) and is fully responsive — mobile sidebar opens via hamburger.
+
+### Create your admin user
+
+1. Open Supabase Dashboard → **Authentication → Users → Add user**
+2. Choose **Create new user**
+3. Email: `admin@chapaimango.com` (or whatever)
+4. Password: a strong password
+5. ✅ Check **Auto Confirm User**
+6. Click **Create user**
+
+> Need more than one admin? Just add more users the same way — anyone authenticated has admin access. RLS policies in `supabase/schema.sql` allow any authenticated user to manage everything.
+
+### Re-running schema.sql for admin RLS
+
+If you set up Supabase before this admin update, re-run [`supabase/schema.sql`](./supabase/schema.sql) (it's idempotent — `drop policy if exists` + `create policy`). The bottom block adds the admin policies that authorize logged-in users to update/delete orders, manage products, etc.
+
+### Sign in
+
+1. Run the dev server (`npm run dev`)
+2. Visit <http://localhost:3000/admin>
+3. Middleware redirects you to `/admin/login`
+4. Sign in with the email + password you created in Supabase
+5. You'll land on the dashboard
+
+### Security notes
+
+- The dashboard relies on Supabase Auth + RLS policies — there's no separate `is_admin` flag. Anyone who can log in can manage everything. For a single business this is usually fine; for a multi-staff setup add a `profiles.role` column and tighten RLS to `role = 'admin'`.
+- The admin area is excluded from search engines (`robots: { index: false }`).
+- Admin pages are server-rendered with `dynamic = "force-dynamic"` so changes appear immediately without revalidation lag.
