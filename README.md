@@ -2,7 +2,7 @@
 
 A premium full-stack e-commerce site for selling **Chapainawabganj-er gachpaka aam** online.
 
-Built with **Next.js 14**, **Supabase**, **Tailwind CSS**, **React Three Fiber** (3D hero), **Framer Motion** & **Zustand**. Fully deployable to **Vercel** in minutes.
+Built with **Next.js 14**, **Supabase**, **Tailwind CSS**, **React Three Fiber** (3D hero), **Framer Motion** & **Zustand**. One-click deploy to **Railway** (or Vercel).
 
 ---
 
@@ -15,7 +15,7 @@ Built with **Next.js 14**, **Supabase**, **Tailwind CSS**, **React Three Fiber**
 - 🗄️ **Supabase** — products, orders, testimonials, contact messages
 - 🪄 **Mock data fallback** — site works locally even before Supabase is wired up
 - 📱 Fully responsive · animated · SEO-friendly · BDT formatting
-- ⚡ Auto-deploy from GitHub → Vercel
+- ⚡ Auto-deploy from GitHub → Railway / Vercel
 
 ---
 
@@ -102,7 +102,54 @@ You can also build an admin panel later at `/admin` (Supabase auth + service rol
 
 ---
 
-## ☁️ Deploy to Vercel (3 minutes)
+## 🚂 Deploy to Railway (recommended, 5 minutes)
+
+Railway uses **Nixpacks** to detect Next.js automatically. Config files in this repo (`railway.json`, `nixpacks.toml`) make the build deterministic and add a healthcheck.
+
+### 1. Sign in
+1. Go to <https://railway.com> → **Login**
+2. **Continue with GitHub** → authorize
+
+### 2. Create the project
+1. Click **New Project** → **Deploy from GitHub repo**
+2. Select **`Foisa590/Chapai_Mango`**
+3. Railway detects Next.js + reads `railway.json` → starts an initial build
+4. **Wait** — first build takes ~3-4 minutes (you'll see logs streaming)
+
+### 3. Add environment variables
+1. Open the service → **Variables** tab
+2. Add each one (use the **Raw Editor** for bulk paste):
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://xxxxxxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi...
+NEXT_PUBLIC_BKASH_NUMBER=01XXXXXXXXX
+NEXT_PUBLIC_NAGAD_NUMBER=01XXXXXXXXX
+NEXT_PUBLIC_ROCKET_NUMBER=01XXXXXXXXX
+NEXT_PUBLIC_BUSINESS_PHONE=01XXXXXXXXX
+NEXT_PUBLIC_BUSINESS_EMAIL=hello@chapaimango.com
+```
+
+3. Save — Railway will auto-redeploy with the new variables
+
+### 4. Generate a public URL
+1. **Settings → Networking → Generate Domain**
+2. Railway gives you `chapai-mango-production.up.railway.app` (or similar)
+3. Open it → 🎉 your site is live
+
+### 5. (Optional) Custom domain
+1. **Settings → Networking → Custom Domain** → add `chapaimango.com`
+2. Add the CNAME / A record Railway shows you in your DNS provider
+3. Wait ~10 minutes — Railway provisions HTTPS automatically
+
+### Health check
+Railway pings `/api/health` every few seconds to confirm the app is alive. Endpoint defined in `app/api/health/route.ts` — always returns `{"status":"ok"}`.
+
+> 💰 **Pricing note:** Railway gives a one-time **$5 trial credit** (no card needed) — enough to run this site for ~1 month while testing. After that, the **Hobby plan ($5/month, ~৳600)** is required and needs a card. If you want a permanently-free option, use Vercel instead (see below).
+
+---
+
+## ☁️ Deploy to Vercel (alternative, 3 minutes)
 
 ### 1. Push to GitHub
 This repo is already at <https://github.com/Foisa590/Chapai_Mango>. Just commit & push your local changes.
@@ -204,7 +251,7 @@ Chapai_Mango/
 | Database / Auth | Supabase |
 | Notifications | react-hot-toast |
 | Icons | lucide-react |
-| Deploy | Vercel |
+| Deploy | Railway / Vercel |
 
 ---
 
