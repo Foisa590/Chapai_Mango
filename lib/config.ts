@@ -17,6 +17,7 @@ const ALL_PAYMENT_METHODS: PaymentMethod[] = [
 
 const DEFAULT_DELIVERY_FEE = 120;
 const DEFAULT_FREE_OVER = 2000;
+const DEFAULT_MIN_ORDER_KG = 10;
 
 function parseEnabledMethods(raw?: string): PaymentMethod[] {
   if (!raw || !raw.trim()) return [...ALL_PAYMENT_METHODS];
@@ -45,7 +46,12 @@ export const config = {
     DEFAULT_FREE_OVER
   ),
   /** Payment methods customers are allowed to pick on checkout. */
-  paymentMethods: parseEnabledMethods(process.env.NEXT_PUBLIC_PAYMENT_METHODS)
+  paymentMethods: parseEnabledMethods(process.env.NEXT_PUBLIC_PAYMENT_METHODS),
+  /** Minimum total kilograms across all cart items required to checkout. */
+  minOrderKg: parseNonNegativeNumber(
+    process.env.NEXT_PUBLIC_MIN_ORDER_KG,
+    DEFAULT_MIN_ORDER_KG
+  )
 };
 
 /**
@@ -76,4 +82,9 @@ export function isPaymentMethodEnabled(method: PaymentMethod): boolean {
 /** First enabled payment method — used as the form default. */
 export function defaultPaymentMethod(): PaymentMethod {
   return config.paymentMethods[0] ?? "cod";
+}
+
+/** Sum of `quantity_kg` across cart items. */
+export function totalCartKg(items: { quantity_kg: number }[]): number {
+  return items.reduce((sum, i) => sum + (i.quantity_kg || 0), 0);
 }

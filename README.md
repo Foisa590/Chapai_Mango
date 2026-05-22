@@ -429,3 +429,33 @@ NEXT_PUBLIC_PAYMENT_METHODS=cod,bkash
 Whichever methods you list are the only tiles rendered on `/checkout`. The form's default selection is the first method in your list. Save → 30s redeploy → live. Existing orders aren't touched.
 
 > 📝 The order schema in Supabase still allows all four method values, so you can re-enable COD later without any migration.
+
+### 📦 Minimum order quantity
+
+Set a cart-wide minimum kilogram threshold so single-piece orders are blocked.
+
+| Variable | What it does | Default |
+|---|---|---|
+| `NEXT_PUBLIC_MIN_ORDER_KG` | Minimum **total** kilograms across all cart items required to checkout. Set to `0` to remove the limit. | `10` |
+
+Behaviour:
+- The product detail page's quantity selector starts at the minimum (so a one-product order already satisfies the rule).
+- The cart shows an amber "ন্যূনতম অর্ডার N কেজি — কার্টে আরও X কেজি যোগ করুন" warning and disables the checkout button until met.
+- The checkout form re-validates on submit and bounces the customer back to /cart if they somehow bypass the UI.
+
+### ✨ Animated promo banners
+
+The site now has two production-grade promo zones — both Bangla, both built with motion that's smooth on phones and respects `prefers-reduced-motion`.
+
+| Where | Component | Animation |
+|---|---|---|
+| Above the navbar on every public page | `components/promo/TopMarquee.tsx` | Pure-CSS infinite right-to-left scroll with a duplicated track for seamless loop. Pauses on hover/long-press. |
+| On the home page between the 3D hero and the featured grid | `components/promo/RotatingHighlights.tsx` | `framer-motion` `<AnimatePresence>` slide-up + fade transition every 3.8s, with click-to-jump indicator dots. |
+
+Tweak the messages by editing the `PROMO_MESSAGES` / `HIGHLIGHTS` arrays at the top of each component.
+
+### 👨‍💻 Developer credit
+
+Footer carries a clickable credit:
+
+> Developed by [MD FOISAL IQBAL](https://www.facebook.com/foysal.iqbal.359)

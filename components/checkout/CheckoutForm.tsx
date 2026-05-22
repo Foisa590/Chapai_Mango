@@ -140,6 +140,14 @@ export default function CheckoutForm() {
       router.push("/products");
       return;
     }
+    const totalKg = items.reduce((s, i) => s + (i.quantity_kg || 0), 0);
+    if (siteConfig.minOrderKg > 0 && totalKg < siteConfig.minOrderKg) {
+      toast.error(
+        `ন্যূনতম অর্ডার ${siteConfig.minOrderKg} কেজি — কার্টে এখন ${totalKg} কেজি`
+      );
+      router.push("/cart");
+      return;
+    }
     if (isSupabaseConfigured() && !user) {
       toast.error("অর্ডার করতে সাইন ইন করুন");
       router.push("/login?next=/checkout");
