@@ -388,3 +388,24 @@ Customers can sign up and sign in with **either** their phone number **or** an e
 Now customers can sign up with phone+password instantly, no SMS required.
 
 > Want OTP confirmation instead? Wire up Twilio / MessageBird as the SMS provider in Supabase. The signup form already shows the right "OTP পাঠানো হয়েছে" screen when `data.session` is null, so the customer just needs to verify and then visit `/login`.
+
+### 🔑 No Twilio needed for phone signup
+
+Supabase's native Phone provider needs a paid SMS gateway (Twilio, MessageBird, etc.) just to be enabled. Most launches don't want that overhead, so we ship a workaround that **only uses the Email provider**:
+
+When a customer picks **"ফোন"** mode on signup, the form derives a deterministic synthetic email from the phone number and signs them up via the Email provider:
+
+```
+01712345678  ⇒  bd8801712345678@phone.chapaimango.local
+```
+
+The `.local` TLD is RFC-reserved so the address can never receive real mail — and that's fine, because **"Confirm email" is OFF** on the project. The customer never sees this string. Login resolves the same email from whatever phone they type in, so phone+password works end-to-end without any SMS provider.
+
+The real phone is preserved in `auth.users.raw_user_meta_data.phone` (and copied onto every order they place), so admin can call/text them from the dashboard normally.
+
+### Setup checklist (no SMS provider required)
+
+1. Supabase Dashboard → **Authentication → Providers → Email** → toggle **Confirm email** OFF → Save.
+2. That's it. Phone-mode signup, email-mode signup, and login (either way) all work.
+
+> Want real phone OTP later? Wire up Twilio or MessageBird, then change `phoneToSyntheticEmail()` in `lib/phone.ts` to call `signUp({ phone, password })` instead. The form UI doesn't have to change.

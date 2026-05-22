@@ -45,3 +45,34 @@ export function formatBdPhone(input: string | null | undefined): string {
   if (!m) return input;
   return `${m[1]}-${m[2]}`;
 }
+
+/**
+ * Synthetic email used when a customer signs up with a phone number.
+ *
+ * Supabase's native Phone provider needs a paid SMS gateway (Twilio /
+ * MessageBird / etc.) — overkill for a launch. So we keep using the
+ * Email provider and derive a deterministic "fake" email from the
+ * phone number. The real phone is also stored in user_metadata.phone
+ * so checkout / orders can show it nicely.
+ *
+ * Format: bd<13-digit-E164-without-plus>@phone.chapaimango.local
+ *   01712345678  ->  bd8801712345678@phone.chapaimango.local
+ *
+ * The .local TLD is reserved (RFC 6762) so the address is guaranteed
+ * to never reach a real inbox; that's fine because email confirmation
+ * is turned off on the project. Login resolves the same email from
+ * the entered phone, so the customer never sees this string.
+ */
+export const PHONE_EMAIL_DOMAIN = "phone.chapaimango.local";
+
+export function phoneToSyntheticEmail(phone: string): string {
+  const e164 = normalizeBdPhone(phone);
+  const digits = e164.replace(/^\+/, "");
+  return `bd${digits}@${PHONE_EMAIL_DOMAIN}`;
+}
+
+/** True if the email looks like one we generated for a phone account. */
+export function isSyntheticPhoneEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return email.endsWith(`@${PHONE_EMAIL_DOMAIN}`);
+}

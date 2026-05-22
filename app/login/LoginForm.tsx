@@ -5,7 +5,11 @@ import { useSearchParams } from "next/navigation";
 import { Loader2, LogIn, Mail, Smartphone } from "lucide-react";
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
-import { isValidBdPhone, normalizeBdPhone } from "@/lib/phone";
+import {
+  isValidBdPhone,
+  normalizeBdPhone,
+  phoneToSyntheticEmail
+} from "@/lib/phone";
 import { cn } from "@/lib/utils";
 
 type AuthMode = "phone" | "email";
@@ -24,9 +28,10 @@ export default function LoginForm() {
     e.preventDefault();
     setError(null);
 
-    let credentials:
-      | { email: string; password: string }
-      | { phone: string; password: string };
+    // Both branches go through the email provider. For phone mode we
+    // resolve the same synthetic email the signup form generated, so
+    // we don't need a paid SMS gateway to support phone+password.
+    let credentials: { email: string; password: string };
     if (mode === "email") {
       credentials = {
         email: identifier.trim().toLowerCase(),
@@ -38,7 +43,7 @@ export default function LoginForm() {
         return;
       }
       credentials = {
-        phone: normalizeBdPhone(identifier),
+        email: phoneToSyntheticEmail(normalizeBdPhone(identifier)),
         password
       };
     }
