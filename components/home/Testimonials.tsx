@@ -40,7 +40,7 @@ export default function Testimonials({
                   />
                 ))}
               </div>
-              <p className="text-ink/80 leading-relaxed">"{t.message}"</p>
+              <p className="text-ink/80 leading-relaxed">&ldquo;{t.message}&rdquo;</p>
               <div className="mt-5 pt-4 border-t border-mango-200/60">
                 <div className="font-display text-base font-semibold text-ink">
                   {t.name}

@@ -256,7 +256,7 @@ export default function CheckoutForm() {
             <div className="mt-5 rounded-2xl border-2 border-dashed border-mango-300 bg-mango-50 p-5">
               <p className="text-sm font-semibold text-ink mb-3">
                 {method.toUpperCase()} diye <strong>{formatBDT(total)}</strong>{" "}
-                "Send Money" / "Personal" korun ei number e:
+                &ldquo;Send Money&rdquo; / &ldquo;Personal&rdquo; korun ei number e:
               </p>
               <div className="flex items-center gap-2 mb-4">
                 <span className="font-display text-2xl font-bold text-mango-700 tracking-wider">
