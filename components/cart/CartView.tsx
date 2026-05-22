@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { useCart } from "@/store/cart-store";
 import { formatBDT } from "@/lib/utils";
+import { calcDeliveryFee, config } from "@/lib/config";
 
 export default function CartView() {
   const items = useCart((s) => s.items);
@@ -27,8 +28,14 @@ export default function CartView() {
     );
   }
 
-  const deliveryFee = subtotal >= 2000 ? 0 : 120;
+  const deliveryFee = calcDeliveryFee(subtotal);
   const total = subtotal + deliveryFee;
+  // Show the "buy ৳X more for free delivery" hint only when there's a
+  // chargeable fee that would still flip to free above some threshold.
+  const showFreeDeliveryHint =
+    config.deliveryFee > 0 &&
+    config.freeDeliveryOver > 0 &&
+    subtotal < config.freeDeliveryOver;
 
   return (
     <div className="grid lg:grid-cols-3 gap-8">
@@ -99,9 +106,9 @@ export default function CartView() {
           label="ডেলিভারি"
           value={deliveryFee === 0 ? "ফ্রি" : formatBDT(deliveryFee)}
         />
-        {subtotal < 2000 && (
+        {showFreeDeliveryHint && (
           <p className="text-[11px] text-mango-700 mt-1">
-            ৳{2000 - subtotal} আরও কিনলেই → ফ্রি ডেলিভারি!
+            ৳{config.freeDeliveryOver - subtotal} আরও কিনলেই → ফ্রি ডেলিভারি!
           </p>
         )}
         <div className="my-4 border-t border-mango-200/60" />

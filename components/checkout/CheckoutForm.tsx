@@ -17,6 +17,12 @@ import {
 import { useCart } from "@/store/cart-store";
 import { formatBDT } from "@/lib/utils";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import {
+  calcDeliveryFee,
+  config as siteConfig,
+  defaultPaymentMethod,
+  isPaymentMethodEnabled
+} from "@/lib/config";
 import type { PaymentMethod } from "@/types";
 import type { User } from "@supabase/supabase-js";
 
@@ -46,6 +52,14 @@ const schema = z
     payment_sender_number: z.string().optional()
   })
   .refine(
+    (data) =>
+      isPaymentMethodEnabled(data.payment_method),
+    {
+      message: "এই পেমেন্ট পদ্ধতি বর্তমানে চালু নেই",
+      path: ["payment_method"]
+    }
+  )
+  .refine(
     (data) => {
       if (data.payment_method === "cod") return true;
       return !!data.payment_txn_id && !!data.payment_sender_number;
@@ -67,7 +81,7 @@ export default function CheckoutForm() {
   const [done, setDone] = useState<{ id?: string } | null>(null);
   const [user, setUser] = useState<User | null>(null);
 
-  const deliveryFee = subtotal >= 2000 ? 0 : 120;
+  const deliveryFee = calcDeliveryFee(subtotal);
   const total = subtotal + deliveryFee;
 
   const {
@@ -78,7 +92,7 @@ export default function CheckoutForm() {
     formState: { errors }
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { payment_method: "cod" }
+    defaultValues: { payment_method: defaultPaymentMethod() }
   });
 
   // Pull the signed-in user (server already redirected unauthed visitors to
@@ -295,39 +309,53 @@ export default function CheckoutForm() {
         {/* Payment */}
         <Card title="পেমেন্ট পদ্ধতি">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <PayOption
-              value="cod"
-              current={method}
-              register={register}
-              icon={<Banknote className="h-5 w-5" />}
-              label="ক্যাশ অন ডেলিভারি"
-              sub="পণ্য পেয়ে দেবেন"
-            />
-            <PayOption
-              value="bkash"
-              current={method}
-              register={register}
-              icon={<Smartphone className="h-5 w-5" />}
-              label="bKash"
-              sub="Send Money"
-            />
-            <PayOption
-              value="nagad"
-              current={method}
-              register={register}
-              icon={<Smartphone className="h-5 w-5" />}
-              label="Nagad"
-              sub="Send Money"
-            />
-            <PayOption
-              value="rocket"
-              current={method}
-              register={register}
-              icon={<Smartphone className="h-5 w-5" />}
-              label="Rocket"
-              sub="Send Money"
-            />
+            {isPaymentMethodEnabled("cod") && (
+              <PayOption
+                value="cod"
+                current={method}
+                register={register}
+                icon={<Banknote className="h-5 w-5" />}
+                label="ক্যাশ অন ডেলিভারি"
+                sub="পণ্য পেয়ে দেবেন"
+              />
+            )}
+            {isPaymentMethodEnabled("bkash") && (
+              <PayOption
+                value="bkash"
+                current={method}
+                register={register}
+                icon={<Smartphone className="h-5 w-5" />}
+                label="bKash"
+                sub="Send Money"
+              />
+            )}
+            {isPaymentMethodEnabled("nagad") && (
+              <PayOption
+                value="nagad"
+                current={method}
+                register={register}
+                icon={<Smartphone className="h-5 w-5" />}
+                label="Nagad"
+                sub="Send Money"
+              />
+            )}
+            {isPaymentMethodEnabled("rocket") && (
+              <PayOption
+                value="rocket"
+                current={method}
+                register={register}
+                icon={<Smartphone className="h-5 w-5" />}
+                label="Rocket"
+                sub="Send Money"
+              />
+            )}
           </div>
+
+          {siteConfig.paymentMethods.length === 0 && (
+            <p className="mt-3 text-xs text-red-700">
+              কোনো পেমেন্ট পদ্ধতি চালু নেই — সাইট অ্যাডমিনকে জানান।
+            </p>
+          )}
 
           {method !== "cod" && (
             <div className="mt-5 rounded-2xl border-2 border-dashed border-mango-300 bg-mango-50 p-5">

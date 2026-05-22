@@ -388,3 +388,44 @@ Customers can sign up and sign in with **either** their phone number **or** an e
 Now customers can sign up with phone+password instantly, no SMS required.
 
 > Want OTP confirmation instead? Wire up Twilio / MessageBird as the SMS provider in Supabase. The signup form already shows the right "OTP পাঠানো হয়েছে" screen when `data.session` is null, so the customer just needs to verify and then visit `/login`.
+
+### 🚚 Make delivery free / change the fee — without code changes
+
+Three knobs on Railway (Vercel works the same way) drive the delivery cost. Open **Railway → your service → Variables** and add/update any of these. The site auto-redeploys in ~30 seconds.
+
+| Variable | What it does | Default |
+|---|---|---|
+| `NEXT_PUBLIC_DELIVERY_FEE` | Flat fee in BDT charged below the threshold. **Set to `0` to make delivery always free.** | `120` |
+| `NEXT_PUBLIC_FREE_DELIVERY_OVER` | Cart subtotal at or above which delivery becomes free. Set to `0` to never auto-waive. | `2000` |
+
+**Common scenarios:**
+
+- **Free delivery for everyone (promo / Eid):** set `NEXT_PUBLIC_DELIVERY_FEE=0` → save → wait 30s → done.
+- **Lower the fee to ৳80:** set `NEXT_PUBLIC_DELIVERY_FEE=80`.
+- **Free over ৳1000 instead of ৳2000:** set `NEXT_PUBLIC_FREE_DELIVERY_OVER=1000`.
+- **Always charge the fee, never auto-waive:** set `NEXT_PUBLIC_FREE_DELIVERY_OVER=0`.
+- **Roll back to defaults:** delete the variables (or just unset them) and redeploy.
+
+The cart's "buy ৳X more for free delivery" hint hides itself automatically when delivery is already free.
+
+### 💳 Turn payment methods on/off (e.g. disable COD when on holiday)
+
+Add `NEXT_PUBLIC_PAYMENT_METHODS` on Railway, comma-separated:
+
+```env
+# All four (default behaviour if unset)
+NEXT_PUBLIC_PAYMENT_METHODS=cod,bkash,nagad,rocket
+
+# COD off — accept only mobile financial services
+NEXT_PUBLIC_PAYMENT_METHODS=bkash,nagad,rocket
+
+# Only bKash
+NEXT_PUBLIC_PAYMENT_METHODS=bkash
+
+# Re-enable COD any time by adding it back to the list
+NEXT_PUBLIC_PAYMENT_METHODS=cod,bkash
+```
+
+Whichever methods you list are the only tiles rendered on `/checkout`. The form's default selection is the first method in your list. Save → 30s redeploy → live. Existing orders aren't touched.
+
+> 📝 The order schema in Supabase still allows all four method values, so you can re-enable COD later without any migration.
