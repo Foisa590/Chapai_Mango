@@ -9,17 +9,17 @@ export default function FeaturedMangoes({ products }: { products: Mango[] }) {
       <div className="flex items-end justify-between mb-10 flex-wrap gap-4">
         <div>
           <p className="text-sm font-semibold text-mango-600 mb-2">
-            ━ Featured Varieties
+            ━ বিশেষ জাতসমূহ
           </p>
           <h2 className="section-title">
-            Chapai-er <span className="shimmer-text">Sera Aam</span>
+            চাঁপাইনবাবগঞ্জের <span className="shimmer-text">সেরা আম</span>
           </h2>
         </div>
         <Link
           href="/products"
           className="inline-flex items-center gap-2 text-sm font-semibold text-mango-700 hover:gap-3 transition-all"
         >
-          Sob dekhun <ArrowRight className="h-4 w-4" />
+          সব দেখুন <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
 

@@ -16,14 +16,12 @@ export default function CartView() {
     return (
       <div className="glass rounded-3xl p-14 text-center">
         <ShoppingBag className="h-16 w-16 mx-auto text-mango-400" />
-        <h2 className="font-display text-2xl font-bold mt-4">
-          Cart faka
-        </h2>
+        <h2 className="font-display-bn text-2xl font-bold mt-4">কার্ট ফাঁকা</h2>
         <p className="mt-2 text-ink/60">
-          Apnar prio aam choose kore cart-e add korun.
+          আপনার পছন্দের আম বেছে কার্টে যোগ করুন।
         </p>
         <Link href="/products" className="btn-primary mt-6 inline-flex">
-          Shop dekhun
+          শপ দেখুন
         </Link>
       </div>
     );
@@ -42,13 +40,18 @@ export default function CartView() {
           >
             <div className="relative h-24 w-24 sm:h-28 sm:w-28 rounded-2xl overflow-hidden bg-mango-100 shrink-0">
               {it.image && (
-                <Image src={it.image} alt={it.name} fill className="object-cover" />
+                <Image
+                  src={it.image}
+                  alt={it.name}
+                  fill
+                  className="object-cover"
+                />
               )}
             </div>
             <div className="flex-1 min-w-0">
               <Link
                 href={`/products/${it.slug}`}
-                className="font-display text-base sm:text-lg font-bold hover:text-mango-700 line-clamp-1"
+                className="font-display-bn text-base sm:text-lg font-bold hover:text-mango-700 line-clamp-1"
               >
                 {it.name}
               </Link>
@@ -63,8 +66,8 @@ export default function CartView() {
                   >
                     <Minus className="h-3.5 w-3.5" />
                   </button>
-                  <span className="min-w-[2ch] text-center text-sm font-semibold">
-                    {it.quantity_kg}kg
+                  <span className="min-w-[3ch] text-center text-sm font-semibold">
+                    {it.quantity_kg} কেজি
                   </span>
                   <button
                     onClick={() => setQty(it.id, it.quantity_kg + 1)}
@@ -73,7 +76,7 @@ export default function CartView() {
                     <Plus className="h-3.5 w-3.5" />
                   </button>
                 </div>
-                <div className="font-display text-lg font-bold text-mango-700">
+                <div className="font-display-bn text-base sm:text-lg font-bold text-mango-700">
                   {formatBDT(it.price_per_kg * it.quantity_kg)}
                 </div>
               </div>
@@ -81,7 +84,7 @@ export default function CartView() {
             <button
               onClick={() => remove(it.id)}
               className="grid place-items-center h-9 w-9 rounded-full text-red-500 hover:bg-red-50 shrink-0"
-              aria-label="Remove"
+              aria-label="সরান"
             >
               <Trash2 className="h-4 w-4" />
             </button>
@@ -90,28 +93,28 @@ export default function CartView() {
       </div>
 
       <aside className="lg:sticky lg:top-24 self-start glass rounded-3xl p-6">
-        <h3 className="font-display text-xl font-bold mb-4">Order Summary</h3>
-        <Row label="Subtotal" value={formatBDT(subtotal)} />
+        <h3 className="font-display-bn text-xl font-bold mb-4">অর্ডার সারমর্ম</h3>
+        <Row label="সাবটোটাল" value={formatBDT(subtotal)} />
         <Row
-          label="Delivery"
-          value={deliveryFee === 0 ? "Free" : formatBDT(deliveryFee)}
+          label="ডেলিভারি"
+          value={deliveryFee === 0 ? "ফ্রি" : formatBDT(deliveryFee)}
         />
         {subtotal < 2000 && (
           <p className="text-[11px] text-mango-700 mt-1">
-            ৳{2000 - subtotal} aro buy korun → Free delivery!
+            ৳{2000 - subtotal} আরও কিনলেই → ফ্রি ডেলিভারি!
           </p>
         )}
         <div className="my-4 border-t border-mango-200/60" />
-        <Row label="Total" value={formatBDT(total)} bold />
+        <Row label="মোট" value={formatBDT(total)} bold />
 
         <Link href="/checkout" className="btn-primary w-full mt-6">
-          Checkout
+          চেকআউট
         </Link>
         <Link
           href="/products"
           className="block text-center mt-3 text-xs text-ink/60 hover:text-mango-700"
         >
-          ← Aro shopping korun
+          ← আরও কিনতে যান
         </Link>
       </aside>
     </div>
@@ -130,7 +133,7 @@ function Row({
   return (
     <div
       className={`flex justify-between items-baseline py-1 ${
-        bold ? "font-display text-xl font-bold text-mango-700" : "text-sm"
+        bold ? "font-display-bn text-xl font-bold text-mango-700" : "text-sm"
       }`}
     >
       <span className={bold ? "" : "text-ink/70"}>{label}</span>

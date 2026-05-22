@@ -30,34 +30,38 @@ export default function Hero() {
         >
           <span className="inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-xs font-semibold text-mango-700 mb-6">
             <Sparkles className="h-3.5 w-3.5" />
-            GI-tagged Khirsapat available
+            GI-ট্যাগ পাওয়া ক্ষীরসাপাত পাওয়া যাচ্ছে
           </span>
 
-          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[1.05] text-ink">
-            Direct from <br className="hidden sm:block" />
-            <span className="shimmer-text">Chapai-er Bagan</span> <br />
-            to Your Doorstep
+          <h1 className="font-display-bn text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold leading-[1.15] text-ink">
+            <span className="shimmer-text">চাঁপাইনবাবগঞ্জের</span> বাগান থেকে{" "}
+            <br className="hidden sm:block" />
+            সরাসরি আপনার দরজায়
           </h1>
 
           <p className="mt-6 text-base sm:text-lg text-ink/70 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-            Gachpaka, chemical-free, hand-picked aam — Himsagar, Langra,
-            Khirsapat, Fazli, Amrapali, Gopalbhog. Heritage variety theke
-            hybrid, sob ek jaygay.
+            গাছপাকা, কেমিক্যাল-মুক্ত, হাতে বাছাই করা আম — হিমসাগর, ল্যাংড়া,
+            ক্ষীরসাপাত, ফজলি, আম্রপালি, গোপালভোগ। ঐতিহ্যবাহী জাত থেকে হাইব্রিড,
+            সবকিছু এক জায়গায়।
           </p>
 
           <div className="mt-8 flex flex-wrap justify-center lg:justify-start gap-4">
             <Link href="/products" className="btn-primary">
-              Order Now <ArrowRight className="h-4 w-4" />
+              এখনই অর্ডার করুন <ArrowRight className="h-4 w-4" />
             </Link>
             <Link href="/about" className="btn-ghost">
-              Amader Story
+              আমাদের গল্প
             </Link>
           </div>
 
           <div className="mt-10 grid grid-cols-3 gap-4 max-w-lg mx-auto lg:mx-0">
-            <Stat icon={<Award className="h-5 w-5" />} value="6+" label="Varieties" />
-            <Stat value="100%" label="Chemical-free" />
-            <Stat value="64" label="Districts" />
+            <Stat
+              icon={<Award className="h-5 w-5" />}
+              value="৬+"
+              label="আমের জাত"
+            />
+            <Stat value="১০০%" label="কেমিক্যাল-মুক্ত" />
+            <Stat value="৬৪" label="জেলায় ডেলিভারি" />
           </div>
         </motion.div>
 
@@ -73,7 +77,7 @@ export default function Hero() {
             <Scene />
           </div>
           <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 glass rounded-full px-5 py-2 text-xs font-medium text-ink/80 whitespace-nowrap">
-            Drag to rotate · 100% gachpaka
+            ঘোরাতে ড্র্যাগ করুন · ১০০% গাছপাকা
           </div>
         </motion.div>
       </div>
@@ -93,7 +97,7 @@ function Stat({
   return (
     <div className="glass rounded-2xl p-3 sm:p-4 text-center">
       {icon && <div className="mx-auto mb-1 text-mango-600">{icon}</div>}
-      <div className="font-display text-xl sm:text-2xl font-bold text-mango-700">
+      <div className="font-display-bn text-xl sm:text-2xl font-bold text-mango-700">
         {value}
       </div>
       <div className="text-[11px] sm:text-xs text-ink/60">{label}</div>

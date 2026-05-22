@@ -13,33 +13,33 @@ import {
 const FEATURES = [
   {
     icon: Leaf,
-    title: "100% Chemical-free",
-    desc: "No carbide, no formalin. Pure gachpaka aam."
+    title: "১০০% কেমিক্যাল-মুক্ত",
+    desc: "কার্বাইড নেই, ফরমালিন নেই। শুধুই গাছপাকা খাঁটি আম।"
   },
   {
     icon: Sprout,
-    title: "Direct from Farm",
-    desc: "Chapainawabganj-er bagan theke shoja apnar bashai."
+    title: "সরাসরি বাগান থেকে",
+    desc: "চাঁপাইনবাবগঞ্জের নিজস্ব বাগান থেকে সরাসরি আপনার বাসায়।"
   },
   {
     icon: PackageCheck,
-    title: "Safe Packaging",
-    desc: "Special foam-padded carton — ekta o nosto hobe na."
+    title: "নিরাপদ প্যাকেজিং",
+    desc: "বিশেষ ফোম-প্যাডিং কার্টন — একটিও আম নষ্ট হবে না।"
   },
   {
     icon: Truck,
-    title: "Fast Delivery",
-    desc: "24-72 ghonta, 64 district-e doorstep delivery."
+    title: "দ্রুত ডেলিভারি",
+    desc: "২৪–৭২ ঘণ্টায় বাংলাদেশের ৬৪টি জেলায় হোম ডেলিভারি।"
   },
   {
     icon: ShieldCheck,
-    title: "Quality Guarantee",
-    desc: "Khoraber khobor pele 100% replacement / refund."
+    title: "মান নিশ্চয়তা",
+    desc: "নষ্ট আম পেলে ১০০% রিপ্লেসমেন্ট অথবা সম্পূর্ণ রিফান্ড।"
   },
   {
     icon: Heart,
-    title: "Heritage Varieties",
-    desc: "GI-tagged Khirsapat, original Himsagar, Langra."
+    title: "ঐতিহ্যবাহী জাত",
+    desc: "GI-ট্যাগ পাওয়া ক্ষীরসাপাত, খাঁটি হিমসাগর, ল্যাংড়া।"
   }
 ];
 
@@ -49,10 +49,11 @@ export default function WhyChooseUs() {
       <div className="container-x">
         <div className="text-center mb-12 max-w-2xl mx-auto">
           <p className="text-sm font-semibold text-mango-600 mb-2">
-            ━ Keno Chapai Mango?
+            ━ কেন Chapai Mango House?
           </p>
           <h2 className="section-title">
-            Aam noy, <span className="shimmer-text">bishwas</span> deliver kori
+            শুধু আম নয়, <span className="shimmer-text">বিশ্বাস</span> ডেলিভার
+            করি
           </h2>
         </div>
 
@@ -69,7 +70,9 @@ export default function WhyChooseUs() {
               <div className="inline-grid place-items-center h-12 w-12 rounded-2xl bg-mango-gradient text-ink shadow-glow group-hover:scale-110 transition">
                 <f.icon className="h-6 w-6" />
               </div>
-              <h3 className="font-display text-xl font-bold mt-4">{f.title}</h3>
+              <h3 className="font-display-bn text-xl font-bold mt-4">
+                {f.title}
+              </h3>
               <p className="mt-2 text-sm text-ink/60 leading-relaxed">
                 {f.desc}
               </p>

@@ -18,11 +18,25 @@ body {
   scroll-behavior: smooth;
 }
 
+/**
+ * Body uses a font stack that resolves Latin glyphs through Inter
+ * (--font-sans) first and Bengali glyphs through Hind Siliguri
+ * (--font-bangla). The browser picks the right font per-glyph
+ * automatically because Inter has no Bengali coverage.
+ */
 body {
   background: rgb(var(--background));
   color: rgb(var(--foreground));
-  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans), var(--font-bangla), system-ui,
+    -apple-system, "Segoe UI", "Hind Siliguri", sans-serif;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Bengali script — let the browser fall through */
+:lang(bn),
+.font-bangla {
+  font-family: var(--font-bangla), "Hind Siliguri", system-ui, sans-serif;
 }
 
 /* Premium scrollbar */
@@ -58,7 +72,7 @@ body {
     @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
   }
   .section-title {
-    @apply font-display text-3xl sm:text-4xl md:text-5xl font-bold text-ink;
+    @apply font-display-bn text-3xl sm:text-4xl md:text-5xl font-bold text-ink leading-tight;
   }
   .input-field {
     @apply w-full rounded-xl border border-mango-200 bg-white/80 px-4 py-3 text-sm

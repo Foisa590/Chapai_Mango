@@ -8,10 +8,10 @@ import { useCart } from "@/store/cart-store";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { href: "/", label: "Home" },
-  { href: "/products", label: "Shop" },
-  { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" }
+  { href: "/", label: "হোম" },
+  { href: "/products", label: "শপ" },
+  { href: "/about", label: "আমাদের সম্পর্কে" },
+  { href: "/contact", label: "যোগাযোগ" }
 ];
 
 export default function Navbar() {
@@ -40,12 +40,12 @@ export default function Navbar() {
       <div className="container-x flex h-16 sm:h-20 items-center justify-between">
         <Link href="/" className="flex items-center gap-2 group">
           <span className="text-3xl group-hover:animate-float">🥭</span>
-          <span className="font-display text-xl sm:text-2xl font-bold text-ink">
-            Chapai <span className="shimmer-text">Mango</span>
+          <span className="font-display text-base sm:text-xl font-bold text-ink leading-tight">
+            Chapai <span className="shimmer-text">Mango</span> House
           </span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-8">
+        <nav className="hidden md:flex items-center gap-7 lg:gap-8">
           {NAV.map((item) => {
             const active =
               item.href === "/"
@@ -73,7 +73,7 @@ export default function Navbar() {
           <Link
             href="/cart"
             className="relative rounded-full bg-white/70 p-2.5 border border-mango-200 hover:bg-mango-100 transition"
-            aria-label="Cart"
+            aria-label="কার্ট"
           >
             <ShoppingBag className="h-5 w-5 text-mango-700" />
             {count > 0 && (
@@ -86,7 +86,7 @@ export default function Navbar() {
           <button
             onClick={() => setOpen((v) => !v)}
             className="md:hidden rounded-full bg-white/70 p-2.5 border border-mango-200"
-            aria-label="Menu"
+            aria-label="মেনু"
           >
             {open ? (
               <X className="h-5 w-5 text-mango-700" />

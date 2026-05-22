@@ -9,8 +9,22 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        display: ["var(--font-display)", "serif"],
-        sans: ["var(--font-sans)", "system-ui", "sans-serif"]
+        // English display (brand etc.)
+        display: ["var(--font-display)", "var(--font-bangla-display)", "serif"],
+        // Bengali display (section titles)
+        "display-bn": [
+          "var(--font-bangla-display)",
+          "var(--font-display)",
+          "serif"
+        ],
+        // Body — Latin via Inter, Bengali via Hind Siliguri (browser picks per glyph)
+        sans: [
+          "var(--font-sans)",
+          "var(--font-bangla)",
+          "system-ui",
+          "sans-serif"
+        ],
+        bangla: ["var(--font-bangla)", "Hind Siliguri", "sans-serif"]
       },
       colors: {
         mango: {

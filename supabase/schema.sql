@@ -1,5 +1,5 @@
 -- ============================================================
--- Chapai Mango — Supabase schema
+-- Chapai Mango House — Supabase schema
 -- Run this in Supabase SQL Editor (one-shot setup)
 -- ============================================================
 
@@ -19,8 +19,8 @@ create table if not exists public.products (
   short_description text not null default '',
   is_featured       boolean not null default false,
   rating            numeric(2,1) not null default 5.0 check (rating between 0 and 5),
-  origin            text not null default 'Chapainawabganj, Bangladesh',
-  season            text not null default 'May - August',
+  origin            text not null default 'নিজামপুর, নাচোল, চাঁপাইনবাবগঞ্জ, বাংলাদেশ',
+  season            text not null default 'মে – আগস্ট',
   created_at        timestamptz not null default now()
 );
 
@@ -98,55 +98,60 @@ create policy "contact insert" on public.contact_messages
   for insert with check (true);
 
 -- ============================================================
--- Seed data
+-- Seed data (Bengali)
 -- ============================================================
 insert into public.products
-  (name, slug, variety, price_per_kg, stock_kg, images, short_description, description, is_featured, rating)
+  (name, slug, variety, price_per_kg, stock_kg, images, short_description, description, is_featured, rating, origin, season)
 values
-  ('Premium Himsagar', 'himsagar', 'Himsagar',
+  ('প্রিমিয়াম হিমসাগর', 'himsagar', 'Himsagar',
    180, 500,
    array['https://images.unsplash.com/photo-1591073113125-e46713c829ed?w=900'],
-   'Bangla aam-er raja — mishti, rosalo, sugondhi.',
-   'Chapainawabganj-er gachpaka Himsagar. Atish moshrin shansh, kom shoror sathe oshadharon mishti shoad. Ekbar khele bar bar mone porbe.',
-   true, 4.9),
-  ('Langra (Banarasi)', 'langra', 'Langra',
+   'বাংলা আমের রাজা — মিষ্টি, রসালো, সুগন্ধি।',
+   'চাঁপাইনবাবগঞ্জের গাছপাকা হিমসাগর। আঁশহীন মসৃণ শাঁস, কম শাঁসে অসাধারণ মিষ্টি স্বাদ। একবার খেলে বারবার মনে পড়বে।',
+   true, 4.9,
+   'নিজামপুর, নাচোল, চাঁপাইনবাবগঞ্জ, বাংলাদেশ', 'মে – জুন'),
+  ('ল্যাংড়া (বানারসি)', 'langra', 'Langra',
    200, 400,
    array['https://images.unsplash.com/photo-1553279768-865429fa0078?w=900'],
-   'Sobuj-soneela rong, oshamanno mishti aam.',
-   'Banarasi heritage variety — patla khosha, motkar moto motkar shansh. Chapai-er mati ar abhawate je Langra hoy ta dunia-bikhyato.',
-   true, 4.8),
-  ('Khirsapat (Khirshapati)', 'khirsapat', 'Khirsapat',
+   'সবুজ-সোনালি রঙ, অসাধারণ মিষ্টি আম।',
+   'বানারসি হেরিটেজ জাত — পাতলা খোসা, মাখনের মতো নরম শাঁস। চাঁপাইয়ের মাটি ও আবহাওয়ায় ল্যাংড়া দুনিয়াবিখ্যাত।',
+   true, 4.8,
+   'নিজামপুর, নাচোল, চাঁপাইনবাবগঞ্জ, বাংলাদেশ', 'জুন – জুলাই'),
+  ('ক্ষীরসাপাত', 'khirsapat', 'Khirsapat',
    220, 350,
    array['https://images.unsplash.com/photo-1605027990121-cbae9e0642df?w=900'],
-   'GI tag pawa Chapai-er gourab.',
-   'Geographical Indication (GI) registered Khirsapat — surokkhito heritage. Khub mishti, holud moromer shansh, fiber-mukto.',
-   true, 5.0),
-  ('Fazli', 'fazli',
-   'Fazli', 150, 600,
+   'GI ট্যাগ পাওয়া চাঁপাইয়ের গৌরব।',
+   'Geographical Indication (GI) নিবন্ধিত ক্ষীরসাপাত — সংরক্ষিত ঐতিহ্য। অত্যন্ত মিষ্টি, হলুদ মাখনের মতো শাঁস, ফাইবার-মুক্ত।',
+   true, 5.0,
+   'নিজামপুর, নাচোল, চাঁপাইনবাবগঞ্জ, বাংলাদেশ', 'মে – জুলাই'),
+  ('ফজলি', 'fazli', 'Fazli',
+   150, 600,
    array['https://images.unsplash.com/photo-1596591868231-05e808fd5ec2?w=900'],
-   'Boro size, late season — pickle ar kheer-er jonno best.',
-   'Mostly 700g–1.2kg per piece. Late-season aam (July–August). Achar, jam, ar pakai khaowar jonno excellent.',
-   false, 4.6),
-  ('Amrapali', 'amrapali', 'Amrapali',
+   'বড় সাইজ, লেট সিজন — আচার ও ক্ষীরের জন্য সেরা।',
+   'প্রতি ফল ৭০০গ্রাম–১.২ কেজি। লেট-সিজন আম (জুলাই–আগস্ট)। আচার, জ্যাম, ও পাকা খাওয়ার জন্য চমৎকার।',
+   false, 4.6,
+   'নিজামপুর, নাচোল, চাঁপাইনবাবগঞ্জ, বাংলাদেশ', 'জুলাই – আগস্ট'),
+  ('আম্রপালি', 'amrapali', 'Amrapali',
    170, 450,
    array['https://images.unsplash.com/photo-1631534179872-2b7a577b1ba2?w=900'],
-   'Hybrid variety — choto, ghono mishti, fiber-less.',
-   'Dashehari + Neelum-er hybrid. Khub mishti, fiber kom, lal-holud rong. Choto family-r jonno perfect.',
-   false, 4.7),
-  ('Gopalbhog', 'gopalbhog', 'Gopalbhog',
+   'হাইব্রিড জাত — ছোট, ঘন মিষ্টি, ফাইবার-মুক্ত।',
+   'দশেহারি + নিলাম-এর হাইব্রিড। অত্যন্ত মিষ্টি, ফাইবার কম, লাল-হলুদ রঙ। ছোট পরিবারের জন্য পারফেক্ট।',
+   false, 4.7,
+   'নিজামপুর, নাচোল, চাঁপাইনবাবগঞ্জ, বাংলাদেশ', 'জুন – জুলাই'),
+  ('গোপালভোগ', 'gopalbhog', 'Gopalbhog',
    160, 300,
    array['https://images.unsplash.com/photo-1605027990121-cbae9e0642df?w=900'],
-   'Early season aam — May-er prothome paben.',
-   'Season-er prothom aam. Chamra patla, sugondh kara, mishti-tok balance. Ramadan/Eid-er prio aam.',
-   false, 4.5)
+   'সিজনের প্রথম আম — মে মাসের শুরুতেই পাবেন।',
+   'মৌসুমের প্রথম আম। চামড়া পাতলা, সুগন্ধে ভরা, মিষ্টি-টক ব্যালান্স। রমজান/ঈদের প্রিয় আম।',
+   false, 4.5,
+   'নিজামপুর, নাচোল, চাঁপাইনবাবগঞ্জ, বাংলাদেশ', 'মে')
 on conflict (slug) do nothing;
 
 insert into public.testimonials (name, location, message, rating) values
-  ('Rashed Khan', 'Dhaka', 'Eto fresh aam onek diner por pelam. Packaging ekdom safe, ekta o nosto hoyni. Insha Allah abar order korbo.', 5),
-  ('Nusrat Jahan', 'Chittagong', 'Khirsapat-er shoad ekdom Chapai-er mato — joto din thakbo Chapai Mango theke i nibo.', 5),
-  ('Tanvir Ahmed', 'Sylhet', 'Price reasonable, delivery fast. Family ke gift hisebe pathiyechilam, shobai khushi.', 5)
+  ('রাশেদ খান', 'ঢাকা', 'অনেক দিন পর এত ফ্রেশ আম পেলাম। প্যাকেজিং একদম সেফ, একটাও নষ্ট হয়নি। ইনশাআল্লাহ আবার অর্ডার করব।', 5),
+  ('নুসরাত জাহান', 'চট্টগ্রাম', 'ক্ষীরসাপাতের স্বাদ একদম চাঁপাইয়ের মতো — যত দিন থাকব Chapai Mango House থেকেই নেব।', 5),
+  ('তানভীর আহমেদ', 'সিলেট', 'দাম রিজনেবল, ডেলিভারি ফাস্ট। পরিবারের জন্য গিফট হিসেবে পাঠিয়েছিলাম, সবাই খুশি।', 5)
 on conflict do nothing;
-
 
 -- ============================================================
 -- Admin policies (authenticated users)

@@ -9,10 +9,18 @@ import { Send } from "lucide-react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
 const schema = z.object({
-  name: z.string().min(2, "Apnar nam likhun"),
-  email: z.string().email("Valid email din").optional().or(z.literal("")),
-  phone: z.string().min(10, "Valid phone number din").optional().or(z.literal("")),
-  message: z.string().min(10, "Onnoto 10 character likhun")
+  name: z.string().min(2, "আপনার নাম লিখুন"),
+  email: z
+    .string()
+    .email("সঠিক ইমেইল দিন")
+    .optional()
+    .or(z.literal("")),
+  phone: z
+    .string()
+    .min(10, "সঠিক ফোন নম্বর দিন")
+    .optional()
+    .or(z.literal("")),
+  message: z.string().min(10, "অন্তত ১০ অক্ষর লিখুন")
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -39,11 +47,11 @@ export default function ContactForm() {
         });
         if (error) throw error;
       }
-      toast.success("Message pathiyechi! Shoja amra contact korbo. Dhonnobad.");
+      toast.success("মেসেজ পাঠিয়েছি! শীঘ্রই যোগাযোগ করব। ধন্যবাদ।");
       reset();
     } catch (err) {
       console.error(err);
-      toast.error("Kichu vul holo. Abar try korun ba phone korun.");
+      toast.error("কিছু ভুল হয়েছে। আবার চেষ্টা করুন বা ফোন করুন।");
     } finally {
       setLoading(false);
     }
@@ -53,9 +61,13 @@ export default function ContactForm() {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
         <label className="block text-xs font-semibold text-ink/70 mb-1.5">
-          Nam *
+          নাম *
         </label>
-        <input {...register("name")} className="input-field" placeholder="Apnar nam" />
+        <input
+          {...register("name")}
+          className="input-field"
+          placeholder="আপনার নাম"
+        />
         {errors.name && (
           <p className="text-xs text-red-600 mt-1">{errors.name.message}</p>
         )}
@@ -64,7 +76,7 @@ export default function ContactForm() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-xs font-semibold text-ink/70 mb-1.5">
-            Email
+            ইমেইল
           </label>
           <input
             {...register("email")}
@@ -77,7 +89,7 @@ export default function ContactForm() {
         </div>
         <div>
           <label className="block text-xs font-semibold text-ink/70 mb-1.5">
-            Phone
+            ফোন
           </label>
           <input
             {...register("phone")}
@@ -92,13 +104,13 @@ export default function ContactForm() {
 
       <div>
         <label className="block text-xs font-semibold text-ink/70 mb-1.5">
-          Message *
+          মেসেজ *
         </label>
         <textarea
           {...register("message")}
           rows={5}
           className="input-field"
-          placeholder="Apnar message ekhane likhun..."
+          placeholder="আপনার মেসেজ এখানে লিখুন..."
         />
         {errors.message && (
           <p className="text-xs text-red-600 mt-1">{errors.message.message}</p>
@@ -111,7 +123,7 @@ export default function ContactForm() {
         className="btn-primary w-full sm:w-auto"
       >
         <Send className="h-4 w-4" />
-        {loading ? "Pathacchi..." : "Message pathan"}
+        {loading ? "পাঠাচ্ছি..." : "মেসেজ পাঠান"}
       </button>
     </form>
   );

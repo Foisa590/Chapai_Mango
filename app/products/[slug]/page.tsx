@@ -17,9 +17,9 @@ export async function generateMetadata({
   params: { slug: string };
 }) {
   const product = await getProductBySlug(params.slug);
-  if (!product) return { title: "Not found" };
+  if (!product) return { title: "পাওয়া যায়নি" };
   return {
-    title: `${product.name} — Chapai Mango`,
+    title: `${product.name} — Chapai Mango House`,
     description: product.short_description
   };
 }
@@ -38,7 +38,7 @@ export default async function ProductDetailPage({
         href="/products"
         className="inline-flex items-center gap-1 text-sm text-mango-700 hover:gap-2 transition-all mb-6"
       >
-        <ChevronLeft className="h-4 w-4" /> Back to Shop
+        <ChevronLeft className="h-4 w-4" /> শপে ফিরে যান
       </Link>
 
       <div className="grid lg:grid-cols-2 gap-10 lg:gap-14">
@@ -48,25 +48,27 @@ export default async function ProductDetailPage({
           <div className="text-xs uppercase tracking-widest text-mango-600 font-semibold">
             {product.variety}
           </div>
-          <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mt-2 leading-tight">
+          <h1 className="font-display-bn text-2xl sm:text-3xl lg:text-4xl font-bold mt-2 leading-tight">
             {product.name}
           </h1>
 
-          <div className="mt-3 flex items-center gap-4 text-sm">
+          <div className="mt-3 flex items-center gap-4 text-sm flex-wrap">
             <span className="flex items-center gap-1">
               <Star className="h-4 w-4 fill-mango-500 text-mango-500" />
               <span className="font-semibold">{product.rating.toFixed(1)}</span>
-              <span className="text-ink/50">/ 5</span>
+              <span className="text-ink/50">/ ৫</span>
             </span>
             <span className="text-ink/40">·</span>
-            <span className="text-ink/60">In stock: {product.stock_kg} kg</span>
+            <span className="text-ink/60">
+              স্টক: {product.stock_kg} কেজি
+            </span>
           </div>
 
           <div className="mt-6 flex items-end gap-2">
-            <span className="font-display text-4xl sm:text-5xl font-bold text-mango-700">
+            <span className="font-display-bn text-3xl sm:text-4xl lg:text-5xl font-bold text-mango-700">
               {formatBDT(product.price_per_kg)}
             </span>
-            <span className="text-ink/50 mb-2">/ kg</span>
+            <span className="text-ink/50 mb-2">/ কেজি</span>
           </div>
 
           <p className="mt-5 text-ink/75 leading-relaxed">
@@ -74,9 +76,21 @@ export default async function ProductDetailPage({
           </p>
 
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <Info icon={<MapPin className="h-4 w-4" />} label="Origin" value={product.origin} />
-            <Info icon={<Calendar className="h-4 w-4" />} label="Season" value={product.season} />
-            <Info icon={<Leaf className="h-4 w-4" />} label="Quality" value="Chemical-free" />
+            <Info
+              icon={<MapPin className="h-4 w-4" />}
+              label="উৎপত্তি"
+              value={product.origin}
+            />
+            <Info
+              icon={<Calendar className="h-4 w-4" />}
+              label="মৌসুম"
+              value={product.season}
+            />
+            <Info
+              icon={<Leaf className="h-4 w-4" />}
+              label="মান"
+              value="কেমিক্যাল-মুক্ত"
+            />
           </div>
 
           <div className="mt-8">
@@ -84,9 +98,9 @@ export default async function ProductDetailPage({
           </div>
 
           <div className="mt-6 glass rounded-2xl p-4 text-xs text-ink/70 leading-relaxed">
-            <strong className="text-ink">Delivery:</strong> Dhaka-er moddhe 24
-            ghonta · Bangladesh-er sob district-e 48-72 ghonta · Order
-            confirmation-er por SMS / call paben.
+            <strong className="text-ink">ডেলিভারি:</strong> ঢাকার ভেতরে ২৪
+            ঘণ্টা · বাংলাদেশের সব জেলায় ৪৮–৭২ ঘণ্টা · অর্ডার কনফার্মেশনের পর
+            SMS / কল পাবেন।
           </div>
         </div>
       </div>
