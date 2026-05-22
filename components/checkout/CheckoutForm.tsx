@@ -134,8 +134,16 @@ export default function CheckoutForm() {
       setDone({ id });
       toast.success("অর্ডার কনফার্ম! ধন্যবাদ।");
     } catch (err) {
-      console.error(err);
-      toast.error("অর্ডার দেওয়া যায়নি। দয়া করে ফোন করুন।");
+      console.error("[checkout] order insert failed:", err);
+      // Surface the real reason so the user can self-diagnose (e.g. RLS,
+      // missing env vars, paused project).
+      const msg =
+        err instanceof Error
+          ? err.message
+          : typeof err === "object" && err !== null && "message" in err
+            ? String((err as { message?: unknown }).message)
+            : "Unknown error";
+      toast.error(`অর্ডার দেওয়া যায়নি: ${msg}`, { duration: 8000 });
     } finally {
       setSubmitting(false);
     }
