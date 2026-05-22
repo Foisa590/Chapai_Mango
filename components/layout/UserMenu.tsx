@@ -6,6 +6,7 @@ import { LogIn, LogOut, Package, Shield } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { signOutCustomerAction } from "@/app/actions/auth";
+import { formatBdPhone } from "@/lib/phone";
 
 export default function UserMenu() {
   const [user, setUser] = useState<User | null>(null);
@@ -18,6 +19,7 @@ export default function UserMenu() {
     const supabase = createClient();
 
     const checkAdmin = async (u: User | null) => {
+      // Phone-only customers don't have an email, so they can't be admin.
       if (!u?.email) {
         setIsAdmin(false);
         return;
@@ -69,11 +71,21 @@ export default function UserMenu() {
   const initial = (
     (user.user_metadata?.full_name as string | undefined)?.[0] ||
     user.email?.[0] ||
+    user.phone?.[2] || // skip the '+8' prefix when we only have a phone
     "?"
   ).toUpperCase();
 
   const fullName =
-    (user.user_metadata?.full_name as string | undefined) || user.email || "";
+    (user.user_metadata?.full_name as string | undefined) ||
+    user.email ||
+    formatBdPhone(user.phone) ||
+    "";
+
+  const subline = user.email
+    ? user.email
+    : user.phone
+      ? formatBdPhone(user.phone)
+      : "";
 
   return (
     <div className="relative" ref={ref}>
@@ -94,10 +106,8 @@ export default function UserMenu() {
             <div className="text-sm font-semibold text-ink truncate">
               {fullName}
             </div>
-            {user.email && fullName !== user.email && (
-              <div className="text-[11px] text-ink/50 truncate">
-                {user.email}
-              </div>
+            {subline && fullName !== subline && (
+              <div className="text-[11px] text-ink/50 truncate">{subline}</div>
             )}
           </div>
 

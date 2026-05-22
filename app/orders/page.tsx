@@ -4,6 +4,7 @@ import { Inbox, Package, ShoppingBag } from "lucide-react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { formatBDT } from "@/lib/utils";
+import { formatBdPhone } from "@/lib/phone";
 import StatusBadge from "@/components/admin/StatusBadge";
 import type { CartItem } from "@/types";
 
@@ -59,7 +60,7 @@ export default async function CustomerOrdersPage() {
           অর্ডার <span className="shimmer-text">হিস্টরি</span>
         </h1>
         <p className="mt-3 text-sm text-ink/60">
-          সাইন ইন: {user.email}
+          সাইন ইন: {user.email || formatBdPhone(user.phone) || user.id}
         </p>
       </div>
 

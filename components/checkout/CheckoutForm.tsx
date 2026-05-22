@@ -82,7 +82,8 @@ export default function CheckoutForm() {
   });
 
   // Pull the signed-in user (server already redirected unauthed visitors to
-  // /login). Pre-fill name/phone from sign-up metadata.
+  // /login). Pre-fill name/phone from sign-up metadata. Phone-only users have
+  // u.email = null, so we fall back to user_metadata.email if present.
   useEffect(() => {
     if (!isSupabaseConfigured()) return;
     const supabase = createClient();
@@ -90,15 +91,18 @@ export default function CheckoutForm() {
       const u = data.user;
       setUser(u);
       if (u) {
+        const metaPhone =
+          (u.user_metadata?.phone as string | undefined) || u.phone || "";
+        const metaEmail =
+          (u.user_metadata?.email as string | undefined) || u.email || "";
         reset((prev) => ({
           ...prev,
           customer_name:
             (u.user_metadata?.full_name as string | undefined) ||
             prev.customer_name ||
             "",
-          phone:
-            (u.user_metadata?.phone as string | undefined) || prev.phone || "",
-          email: u.email || prev.email || ""
+          phone: metaPhone || prev.phone || "",
+          email: metaEmail || prev.email || ""
         }));
       }
     });
@@ -133,7 +137,11 @@ export default function CheckoutForm() {
         user_id: user?.id ?? null,
         customer_name: values.customer_name,
         phone: values.phone,
-        email: values.email || user?.email || null,
+        email:
+          values.email ||
+          user?.email ||
+          (user?.user_metadata?.email as string | undefined) ||
+          null,
         address: values.address,
         district: values.district,
         items,

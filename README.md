@@ -370,3 +370,21 @@ By default Supabase requires email confirmation before a new user can sign in. T
 3. Save
 
 (If you want to keep confirmation on for security, the signup form already shows a "check your inbox" message instead of redirecting.)
+
+### Phone OR Email signup/login (both supported!)
+
+Customers can sign up and sign in with **either** their phone number **or** an email address. The forms have a toggle at the top — তোগ্‌ল-এ "ফোন" / "ইমেইল" beche nin.
+
+- **Phone mode (default):** enter a Bangladeshi number like `01712345678`. The form normalises it to E.164 (`+8801712345678`) before sending it to Supabase. Email is optional — apnar customer email lagle add korte paren, na chaile khali rakhun.
+- **Email mode:** classic email + password. Phone is still collected as a delivery contact.
+
+**One-time Supabase setup for phone signups:**
+
+1. Supabase Dashboard → **Authentication → Sign In / Providers**
+2. Find **"Phone"** in the provider list and turn it **ON**
+3. Scroll to the **"Confirm phone"** toggle and turn it **OFF** (otherwise Supabase will try to send an SMS OTP via a paid provider like Twilio).
+4. Save.
+
+Now customers can sign up with phone+password instantly, no SMS required.
+
+> Want OTP confirmation instead? Wire up Twilio / MessageBird as the SMS provider in Supabase. The signup form already shows the right "OTP পাঠানো হয়েছে" screen when `data.session` is null, so the customer just needs to verify and then visit `/login`.
