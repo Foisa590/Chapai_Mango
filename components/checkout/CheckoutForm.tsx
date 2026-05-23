@@ -225,13 +225,21 @@ export default function CheckoutForm() {
         </h2>
         <p className="mt-2 text-ink/70 max-w-md mx-auto">
           ধন্যবাদ! আমরা আপনার অর্ডার পেয়েছি। অর্ডার ID:{" "}
-          <span className="font-mono font-semibold">{done.id}</span>। আমাদের টিম
-          শীঘ্রই ফোন করে কনফার্ম করবে।
+          <span className="font-mono font-semibold break-all">{done.id}</span>।
+          আমাদের টিম শীঘ্রই ফোন করে কনফার্ম করবে।
         </p>
         <div className="flex gap-3 justify-center mt-6 flex-wrap">
           <Link href="/" className="btn-ghost">
             হোমে ফিরুন
           </Link>
+          {done.id && (
+            <Link
+              href={`/track?id=${encodeURIComponent(done.id)}`}
+              className="btn-ghost"
+            >
+              ট্র্যাক করুন
+            </Link>
+          )}
           <Link href="/products" className="btn-primary">
             আরও কিনুন
           </Link>

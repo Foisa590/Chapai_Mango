@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { formatBDT } from "@/lib/utils";
 import { formatBdPhone } from "@/lib/phone";
 import StatusBadge from "@/components/admin/StatusBadge";
+import OrderCardActions from "./OrderCardActions";
 import type { CartItem } from "@/types";
 
 export const metadata = {
@@ -92,12 +93,18 @@ export default async function CustomerOrdersPage() {
             return (
               <div key={o.id} className="glass rounded-3xl p-5 sm:p-6">
                 <div className="flex items-start justify-between gap-4 flex-wrap mb-4">
-                  <div>
+                  <div className="min-w-0">
                     <div className="text-[11px] uppercase tracking-wider text-mango-600 font-semibold">
                       অর্ডার আইডি
                     </div>
-                    <div className="font-mono text-sm text-ink mt-0.5">
-                      #{o.id.slice(0, 8)}
+                    {/*
+                     * Show the FULL UUID, not just the first 8 chars.
+                     * The tracking RPC requires the full id, so customers
+                     * were copying #cfc037af and confused why it didn't
+                     * work. break-all keeps it inside the card on mobile.
+                     */}
+                    <div className="font-mono text-[11px] sm:text-xs text-ink mt-0.5 break-all leading-snug">
+                      {o.id}
                     </div>
                     <div className="text-xs text-ink/50 mt-1">
                       {new Date(o.created_at).toLocaleString("en-BD", {
@@ -108,8 +115,9 @@ export default async function CustomerOrdersPage() {
                         minute: "2-digit"
                       })}
                     </div>
+                    <OrderCardActions orderId={o.id} phone={o.phone} />
                   </div>
-                  <div className="flex flex-col items-end gap-1">
+                  <div className="flex flex-col items-end gap-1 shrink-0">
                     <StatusBadge status={o.status || "pending"} />
                     <div className="font-display-bn text-2xl font-bold text-mango-700">
                       {formatBDT(Number(o.total))}

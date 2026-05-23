@@ -1,6 +1,15 @@
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { ArrowRight } from "lucide-react";
-import SubscribeButton from "@/components/push/SubscribeButton";
+
+// SubscribeButton self-hides when Web Push is unsupported / VAPID key
+// is missing. Lazy-loading it via dynamic({ ssr:false }) keeps it out
+// of the home page's initial bundle (it ships react-hot-toast +
+// service-worker registration code) so LCP is not impacted.
+const SubscribeButton = dynamic(
+  () => import("@/components/push/SubscribeButton"),
+  { ssr: false }
+);
 
 export default function CTA() {
   return (
@@ -23,8 +32,6 @@ export default function CTA() {
           >
             এখনই অর্ডার করুন <ArrowRight className="h-4 w-4" />
           </Link>
-          {/* Subscribe button is self-hiding when push isn't supported or
-              the VAPID key isn't configured, so it's safe to ship here. */}
           <SubscribeButton />
         </div>
       </div>
