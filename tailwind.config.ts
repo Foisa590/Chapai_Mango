@@ -9,15 +9,22 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        // English display (brand etc.)
-        display: ["var(--font-display)", "var(--font-bangla-display)", "serif"],
-        // Bengali display (section titles)
-        "display-bn": [
+        // English display (brand etc.) — Playfair was dropped to cut LCP.
+        // Georgia is on every iOS/Android/Windows so the fallback is fine.
+        display: [
           "var(--font-bangla-display)",
-          "var(--font-display)",
+          "Georgia",
+          "Cambria",
           "serif"
         ],
-        // Body — Latin via Inter, Bengali via Hind Siliguri (browser picks per glyph)
+        // Bengali display (section titles) — Noto Serif Bengali w/ 700.
+        "display-bn": [
+          "var(--font-bangla-display)",
+          "Georgia",
+          "Cambria",
+          "serif"
+        ],
+        // Body — Latin via Inter, Bengali via Hind Siliguri.
         sans: [
           "var(--font-sans)",
           "var(--font-bangla)",
