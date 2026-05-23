@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import TopMarquee from "@/components/promo/TopMarquee";
+import FloatingWhatsApp from "@/components/whatsapp/FloatingWhatsApp";
 
 /**
  * Wraps the app with public Navbar + Footer, except on /admin routes
@@ -27,6 +28,7 @@ export default function SiteShell({
       <Navbar />
       <main className="page-enter">{children}</main>
       <Footer />
+      <FloatingWhatsApp />
     </>
   );
 }

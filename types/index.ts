@@ -53,3 +53,41 @@ export type Testimonial = {
   message: string;
   rating: number;
 };
+
+export type ProductReview = {
+  id: string;
+  product_id: string;
+  user_id: string | null;
+  author_name: string;
+  rating: number;
+  title: string | null;
+  body: string;
+  is_approved: boolean;
+  created_at: string;
+};
+
+export type ProductRatingStats = {
+  average: number;
+  count: number;
+};
+
+export type PushSubscriptionRow = {
+  id: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  user_id: string | null;
+  user_agent: string | null;
+  created_at: string;
+};
+
+/** Public-safe shape returned by the `track_order` RPC. */
+export type TrackedOrder = {
+  id: string;
+  status: "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
+  customer_name: string;
+  district: string;
+  total: number;
+  payment_method: PaymentMethod;
+  created_at: string;
+};

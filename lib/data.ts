@@ -1,4 +1,4 @@
-import type { Mango, Testimonial } from "@/types";
+import type { Mango, ProductRatingStats, ProductReview, Testimonial } from "@/types";
 
 const ORIGIN = "নিজামপুর, নাচোল, চাঁপাইনবাবগঞ্জ, বাংলাদেশ";
 
@@ -194,5 +194,69 @@ export async function getTestimonials(): Promise<Testimonial[]> {
     return data as Testimonial[];
   } catch {
     return MOCK_TESTIMONIALS;
+  }
+}
+
+
+
+/**
+ * Public-readable approved reviews for a product, newest first.
+ * Falls back to an empty list when Supabase is not configured (so the
+ * product page still renders cleanly in dev).
+ */
+export async function getProductReviews(
+  productId: string,
+  limit = 50
+): Promise<ProductReview[]> {
+  try {
+    const { isSupabaseConfigured, createClient } = await import(
+      "@/lib/supabase/server"
+    );
+    if (!isSupabaseConfigured()) return [];
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("product_reviews")
+      .select("*")
+      .eq("product_id", productId)
+      .eq("is_approved", true)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    return (data || []) as ProductReview[];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Aggregate rating stats for a single product.
+ *
+ * The `recompute_product_rating` trigger keeps `products.rating` and
+ * `products.review_count` in sync with the underlying reviews, so we
+ * just read those columns. When `review_count` is 0 the average is
+ * still meaningful (it's the seed rating set by the admin) but we
+ * surface 0 as the count so the JSON-LD on the product page can decide
+ * whether to omit the AggregateRating block (Google requires count > 0
+ * to render rich-result stars).
+ */
+export async function getProductRatingStats(
+  productId: string
+): Promise<ProductRatingStats> {
+  try {
+    const { isSupabaseConfigured, createClient } = await import(
+      "@/lib/supabase/server"
+    );
+    if (!isSupabaseConfigured()) return { average: 5, count: 0 };
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("products")
+      .select("rating, review_count")
+      .eq("id", productId)
+      .maybeSingle();
+    return {
+      average: Number(data?.rating ?? 5),
+      count: Number(data?.review_count ?? 0)
+    };
+  } catch {
+    return { average: 5, count: 0 };
   }
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import SubscribeButton from "@/components/push/SubscribeButton";
 
 export default function CTA() {
   return (
@@ -15,12 +16,17 @@ export default function CTA() {
         <p className="relative mt-3 text-ink/80 max-w-xl mx-auto">
           সীমিত স্টক — চাঁপাইনবাবগঞ্জের গাছপাকা ঐতিহ্যবাহী আম, মে থেকে আগস্ট।
         </p>
-        <Link
-          href="/products"
-          className="relative mt-7 inline-flex items-center gap-2 rounded-full bg-ink px-7 py-3.5 text-sm font-bold text-cream hover:scale-105 transition shadow-soft"
-        >
-          এখনই অর্ডার করুন <ArrowRight className="h-4 w-4" />
-        </Link>
+        <div className="relative mt-7 flex flex-wrap items-center justify-center gap-3">
+          <Link
+            href="/products"
+            className="inline-flex items-center gap-2 rounded-full bg-ink px-7 py-3.5 text-sm font-bold text-cream hover:scale-105 transition shadow-soft"
+          >
+            এখনই অর্ডার করুন <ArrowRight className="h-4 w-4" />
+          </Link>
+          {/* Subscribe button is self-hiding when push isn't supported or
+              the VAPID key isn't configured, so it's safe to ship here. */}
+          <SubscribeButton />
+        </div>
       </div>
     </section>
   );
