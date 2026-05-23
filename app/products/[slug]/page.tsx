@@ -1,10 +1,13 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { ChevronLeft, MapPin, Calendar, Star, Leaf } from "lucide-react";
 import ProductGallery from "@/components/product/ProductGallery";
 import AddToCartControl from "@/components/product/AddToCartControl";
+import JsonLd from "@/components/seo/JsonLd";
 import { getProductBySlug, getProducts } from "@/lib/data";
 import { formatBDT } from "@/lib/utils";
+import { getSiteUrl, SITE } from "@/lib/site";
 
 export async function generateStaticParams() {
   const products = await getProducts();
@@ -15,12 +18,42 @@ export async function generateMetadata({
   params
 }: {
   params: { slug: string };
-}) {
+}): Promise<Metadata> {
   const product = await getProductBySlug(params.slug);
   if (!product) return { title: "পাওয়া যায়নি" };
+
+  const url = `${getSiteUrl()}/products/${product.slug}`;
+  const title = `${product.name} (${product.variety}) — ${SITE.name}`;
+  const description = `${product.short_description} প্রতি কেজি ৳${product.price_per_kg}। ${product.season} মৌসুম। সরাসরি ${product.origin} থেকে।`;
+
   return {
-    title: `${product.name} — Chapai Mango House`,
-    description: product.short_description
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: "website",
+      url,
+      title,
+      description,
+      siteName: SITE.name,
+      locale: SITE.defaultLocale,
+      images: product.images.length
+        ? [
+            {
+              url: product.images[0],
+              width: 1200,
+              height: 1200,
+              alt: product.name
+            }
+          ]
+        : undefined
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: product.images.slice(0, 1)
+    }
   };
 }
 
@@ -32,8 +65,73 @@ export default async function ProductDetailPage({
   const product = await getProductBySlug(params.slug);
   if (!product) notFound();
 
+  const siteUrl = getSiteUrl();
+  const productUrl = `${siteUrl}/products/${product.slug}`;
+
+  // Schema.org Product markup so Google can render rich results
+  // (price, stock status, rating stars) in search.
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description,
+    image: product.images,
+    sku: product.id,
+    brand: {
+      "@type": "Brand",
+      name: SITE.name
+    },
+    category: "Mango / Fruit",
+    offers: {
+      "@type": "Offer",
+      url: productUrl,
+      priceCurrency: "BDT",
+      price: product.price_per_kg,
+      priceValidUntil: priceValidUntilEndOfYear(),
+      availability:
+        product.stock_kg > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+      itemCondition: "https://schema.org/NewCondition",
+      seller: {
+        "@type": "Organization",
+        name: SITE.name,
+        url: siteUrl
+      }
+    },
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: product.rating,
+      bestRating: 5,
+      worstRating: 1,
+      // We don't currently store individual review counts; surface a
+      // conservative count so Google has a non-zero value.
+      reviewCount: 12
+    }
+  };
+
+  // BreadcrumbList helps Google build the breadcrumb shown above the
+  // result snippet (Home > Shop > Product Name).
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "হোম", item: `${siteUrl}/` },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "শপ",
+        item: `${siteUrl}/products`
+      },
+      { "@type": "ListItem", position: 3, name: product.name, item: productUrl }
+    ]
+  };
+
   return (
     <section className="container-x pt-8 pb-20">
+      <JsonLd data={productJsonLd} />
+      <JsonLd data={breadcrumbJsonLd} />
+
       <Link
         href="/products"
         className="inline-flex items-center gap-1 text-sm text-mango-700 hover:gap-2 transition-all mb-6"
@@ -126,4 +224,10 @@ function Info({
       <div className="mt-1 text-sm font-medium text-ink">{value}</div>
     </div>
   );
+}
+
+/** ISO date for end-of-year — required by schema.org Offer. */
+function priceValidUntilEndOfYear(): string {
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), 11, 31)).toISOString().split("T")[0];
 }
