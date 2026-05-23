@@ -2,19 +2,62 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Award, Sparkles } from "lucide-react";
 
+// Three.js + react-three-fiber + drei together are ~150KB of JS to parse,
+// plus a continuous animation loop. On low-end Android phones this is the
+// single largest contributor to Total Blocking Time. We:
+//   1) Only mount the Scene on desktop (>=1024px) AND
+//   2) Defer the mount until the page is idle / hydrated, so the initial
+//      paint is not blocked even on desktop.
 const Scene = dynamic(() => import("@/components/3d/Scene"), {
   ssr: false,
-  loading: () => (
-    <div className="grid place-items-center h-full">
-      <div className="text-7xl animate-float">🥭</div>
-    </div>
-  )
+  loading: () => <FallbackMango />
 });
 
 export default function Hero() {
+  const [showScene, setShowScene] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // Only render the heavy 3D canvas on real desktops. Tablets and phones
+    // get a lightweight CSS-animated mango — visually playful, near-zero
+    // CPU cost.
+    const mq = window.matchMedia("(min-width: 1024px)");
+    if (!mq.matches) return;
+
+    // Respect users who explicitly turn off animations.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    // Wait until the browser is idle so we don't compete with the rest of
+    // the page for the main thread during initial load. Fall back to a
+    // generous setTimeout for browsers without requestIdleCallback (Safari).
+    const ric =
+      typeof window.requestIdleCallback === "function"
+        ? window.requestIdleCallback
+        : null;
+    const cic =
+      typeof window.cancelIdleCallback === "function"
+        ? window.cancelIdleCallback
+        : null;
+
+    let idleId: number | null = null;
+    let timeoutId: number | null = null;
+    if (ric) {
+      idleId = ric.call(window, () => setShowScene(true), { timeout: 1500 });
+    } else {
+      timeoutId = window.setTimeout(() => setShowScene(true), 600);
+    }
+
+    return () => {
+      if (idleId !== null && cic) cic.call(window, idleId);
+      if (timeoutId !== null) window.clearTimeout(timeoutId);
+    };
+  }, []);
+
   return (
     <section className="relative overflow-hidden bg-hero-radial">
       {/* decorative blobs */}
@@ -74,14 +117,33 @@ export default function Hero() {
           {/* glow ring */}
           <div className="absolute inset-10 rounded-full bg-mango-gradient blur-3xl opacity-50 animate-pulse" />
           <div className="relative h-full">
-            <Scene />
+            {showScene ? <Scene /> : <FallbackMango />}
           </div>
           <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 glass rounded-full px-5 py-2 text-xs font-medium text-ink/80 whitespace-nowrap">
-            ঘোরাতে ড্র্যাগ করুন · ১০০% গাছপাকা
+            {showScene
+              ? "ঘোরাতে ড্র্যাগ করুন · ১০০% গাছপাকা"
+              : "১০০% গাছপাকা · কেমিক্যাল-মুক্ত"}
           </div>
         </motion.div>
       </div>
     </section>
+  );
+}
+
+/**
+ * Lightweight stand-in for the 3D Scene. Used on mobile/tablet and as the
+ * SSR / pre-idle placeholder on desktop. Pure CSS animation, ~0 CPU cost.
+ */
+function FallbackMango() {
+  return (
+    <div className="grid place-items-center h-full select-none">
+      <div
+        aria-hidden="true"
+        className="text-[10rem] sm:text-[13rem] lg:text-[15rem] animate-float drop-shadow-2xl"
+      >
+        🥭
+      </div>
+    </div>
   );
 }
 
