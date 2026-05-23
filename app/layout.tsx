@@ -7,6 +7,7 @@ import {
 } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import SiteShell from "@/components/layout/SiteShell";
+import { getSiteUrl, SITE } from "@/lib/site";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -25,28 +26,89 @@ const notoSerifBengali = Noto_Serif_Bengali({
   variable: "--font-bangla-display"
 });
 
+const siteUrl = getSiteUrl();
+
 export const metadata: Metadata = {
-  title: "Chapai Mango House — চাঁপাইনবাবগঞ্জের সেরা আম",
-  description:
-    "চাঁপাইনবাবগঞ্জের গাছপাকা, কেমিক্যাল-মুক্ত আম সরাসরি আপনার দরজায়। হিমসাগর, ল্যাংড়া, ক্ষীরসাপাত, ফজলি, আম্রপালি, গোপালভোগ — সব জাত এক জায়গায়।",
+  // metadataBase makes every relative og:image / canonical absolute.
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: `${SITE.name} — চাঁপাইনবাবগঞ্জের সেরা আম`,
+    template: `%s — ${SITE.name}`
+  },
+  description: SITE.longDescription,
+  applicationName: SITE.name,
+  authors: [{ name: SITE.name, url: siteUrl }],
+  creator: SITE.name,
+  publisher: SITE.name,
+  category: "shopping",
   keywords: [
     "Chapai Mango House",
     "চাঁপাই ম্যাঙ্গো",
     "চাঁপাইনবাবগঞ্জের আম",
-    "Himsagar",
-    "Langra",
-    "Khirsapat",
-    "Fazli",
-    "Amrapali",
+    "চাঁপাইয়ের আম অনলাইনে",
+    "আম অনলাইনে কিনুন",
+    "Himsagar mango",
+    "Langra mango",
+    "Khirsapat mango",
+    "Fazli mango",
+    "Amrapali mango",
+    "Gopalbhog mango",
     "buy mango online Bangladesh",
-    "Nachole Chapainawabganj"
+    "GI Khirsapat",
+    "Nachole Chapainawabganj",
+    "organic mango Bangladesh"
   ],
+  alternates: {
+    canonical: "/",
+    languages: {
+      "bn-BD": "/",
+      "en-US": "/"
+    }
+  },
   openGraph: {
-    title: "Chapai Mango House — চাঁপাইনবাবগঞ্জের সেরা আম",
-    description:
-      "নিজামপুর, নাচোল, চাঁপাইনবাবগঞ্জ থেকে সরাসরি আপনার দরজায়। অর্ডার করুন আজই।",
     type: "website",
-    locale: "bn_BD"
+    locale: SITE.defaultLocale,
+    url: siteUrl,
+    siteName: SITE.name,
+    title: `${SITE.name} — চাঁপাইনবাবগঞ্জের সেরা আম`,
+    description: SITE.shortDescription,
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: `${SITE.name} — চাঁপাইনবাবগঞ্জের গাছপাকা আম`
+      }
+    ]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE.name} — চাঁপাইনবাবগঞ্জের সেরা আম`,
+    description: SITE.shortDescription,
+    images: ["/opengraph-image"]
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1
+    }
+  },
+  icons: {
+    icon: "/favicon.ico"
+  },
+  // Add Search Console / Bing webmaster verification codes via env vars
+  // so we don't commit them to git. Empty values are fine — Next.js will
+  // simply omit the meta tag.
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+    other: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
+      ? { "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION }
+      : undefined
   }
 };
 
