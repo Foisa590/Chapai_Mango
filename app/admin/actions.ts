@@ -366,3 +366,124 @@ export async function toggleMarqueeAction(
   revalidatePath("/products");
   return { ok: true };
 }
+
+
+
+// ----- Team members (admin manage) -----
+
+import type { TeamMemberRole } from "@/types";
+
+export type TeamMemberInput = {
+  name: string;
+  role: TeamMemberRole;
+  title: string;
+  bio: string;
+  photo_url: string;
+  phone: string | null;
+  email: string | null;
+  facebook_url: string | null;
+  sort_order: number;
+  is_active: boolean;
+};
+
+const VALID_ROLES: TeamMemberRole[] = ["founder", "supplier", "member"];
+
+function sanitiseTeamMember(input: TeamMemberInput) {
+  const name = input.name?.trim();
+  if (!name) return { error: "Name cannot be empty" };
+  if (name.length > 120) return { error: "Name too long (max 120 chars)" };
+
+  const role: TeamMemberRole = VALID_ROLES.includes(input.role)
+    ? input.role
+    : "member";
+
+  const photo = (input.photo_url || "").trim();
+  if (photo && !/^https?:\/\//i.test(photo)) {
+    return { error: "Photo URL must start with http:// or https://" };
+  }
+
+  const fb = (input.facebook_url || "").trim();
+  if (fb && !/^https?:\/\//i.test(fb)) {
+    return { error: "Facebook URL must start with http:// or https://" };
+  }
+
+  return {
+    payload: {
+      name,
+      role,
+      title: (input.title || "").trim().slice(0, 200),
+      bio: (input.bio || "").trim().slice(0, 2000),
+      photo_url: photo,
+      phone: (input.phone || "").trim() || null,
+      email: (input.email || "").trim() || null,
+      facebook_url: fb || null,
+      sort_order: Number.isFinite(Number(input.sort_order))
+        ? Math.max(0, Math.floor(Number(input.sort_order)))
+        : 0,
+      is_active: !!input.is_active
+    }
+  };
+}
+
+export async function upsertTeamMemberAction(
+  input: TeamMemberInput,
+  memberId?: string
+) {
+  if (!isSupabaseConfigured()) {
+    return { error: "Supabase not configured" };
+  }
+  const result = sanitiseTeamMember(input);
+  if ("error" in result) return { error: result.error };
+
+  const supabase = createClient();
+  if (memberId) {
+    const { error } = await supabase
+      .from("team_members")
+      .update(result.payload)
+      .eq("id", memberId);
+    if (error) return { error: error.message };
+  } else {
+    const { error } = await supabase
+      .from("team_members")
+      .insert(result.payload);
+    if (error) return { error: error.message };
+  }
+
+  revalidatePath("/admin/team");
+  revalidatePath("/team");
+  revalidatePath("/about");
+  return { ok: true };
+}
+
+export async function deleteTeamMemberAction(memberId: string) {
+  if (!isSupabaseConfigured()) {
+    return { error: "Supabase not configured" };
+  }
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("team_members")
+    .delete()
+    .eq("id", memberId);
+  if (error) return { error: error.message };
+  revalidatePath("/admin/team");
+  revalidatePath("/team");
+  return { ok: true };
+}
+
+export async function toggleTeamMemberAction(
+  memberId: string,
+  isActive: boolean
+) {
+  if (!isSupabaseConfigured()) {
+    return { error: "Supabase not configured" };
+  }
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("team_members")
+    .update({ is_active: isActive })
+    .eq("id", memberId);
+  if (error) return { error: error.message };
+  revalidatePath("/admin/team");
+  revalidatePath("/team");
+  return { ok: true };
+}

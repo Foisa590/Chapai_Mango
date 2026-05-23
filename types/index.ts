@@ -90,6 +90,24 @@ export type MarqueeItem = {
   created_at: string;
 };
 
+/** Founder / Supplier / Team Member shown on /team. */
+export type TeamMemberRole = "founder" | "supplier" | "member";
+
+export type TeamMember = {
+  id: string;
+  name: string;
+  role: TeamMemberRole;
+  title: string;
+  bio: string;
+  photo_url: string;
+  phone: string | null;
+  email: string | null;
+  facebook_url: string | null;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+};
+
 /** Public-safe shape returned by the `track_order` RPC. */
 export type TrackedOrder = {
   id: string;

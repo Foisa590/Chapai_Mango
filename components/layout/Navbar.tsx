@@ -12,6 +12,7 @@ const NAV = [
   { href: "/", label: "হোম" },
   { href: "/products", label: "শপ" },
   { href: "/about", label: "আমাদের সম্পর্কে" },
+  { href: "/team", label: "আমাদের টিম" },
   { href: "/contact", label: "যোগাযোগ" }
 ];
 

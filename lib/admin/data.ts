@@ -197,3 +197,22 @@ export async function fetchAdminMarquees() {
     .order("created_at", { ascending: false });
   return (data || []) as AdminMarquee[];
 }
+
+
+
+// ----- Team members -----
+
+import type { TeamMember } from "@/types";
+
+export type AdminTeamMember = TeamMember;
+
+export async function fetchAdminTeamMembers() {
+  if (!isSupabaseConfigured()) return [] as AdminTeamMember[];
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("team_members")
+    .select("*")
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false });
+  return (data || []) as AdminTeamMember[];
+}

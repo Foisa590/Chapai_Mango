@@ -1,4 +1,4 @@
-import { Phone, Mail, MapPin, Clock } from "lucide-react";
+import { Phone, Mail, MapPin, Clock, ExternalLink } from "lucide-react";
 import ContactForm from "@/components/contact/ContactForm";
 
 export const metadata = {
@@ -7,10 +7,38 @@ export const metadata = {
     "Chapai Mango House-এর সাথে যোগাযোগ করুন — অর্ডার, ডেলিভারি বা যে কোনো প্রশ্নে।"
 };
 
+/**
+ * Default coordinates for Nijampur, Nachole, Chapainawabganj.
+ * Operator can override with NEXT_PUBLIC_BUSINESS_MAP_LAT / _LNG
+ * (and optionally NEXT_PUBLIC_BUSINESS_MAP_LABEL) without a code change.
+ *
+ * Why we hard-code coords instead of relying on a place query: the old
+ * embed used `https://www.google.com/maps?q=Nijampur,...&output=embed`
+ * which Google's geocoder often resolves to the wrong place — or just
+ * renders blank because the host disallows being framed for that path.
+ * Using `https://maps.google.com/maps?q=LAT,LNG&output=embed` is the
+ * most reliable no-API-key embed in 2024+.
+ */
+const DEFAULT_LAT = "24.7011";
+const DEFAULT_LNG = "88.3500";
+const DEFAULT_LABEL = "নিজামপুর, নাচোল, চাঁপাইনবাবগঞ্জ";
+
 export default function ContactPage() {
   const phone = process.env.NEXT_PUBLIC_BUSINESS_PHONE || "+880 1XXX-XXXXXX";
   const email =
     process.env.NEXT_PUBLIC_BUSINESS_EMAIL || "hello@chapaimangohouse.com";
+
+  const lat = process.env.NEXT_PUBLIC_BUSINESS_MAP_LAT || DEFAULT_LAT;
+  const lng = process.env.NEXT_PUBLIC_BUSINESS_MAP_LNG || DEFAULT_LNG;
+  const mapLabel = process.env.NEXT_PUBLIC_BUSINESS_MAP_LABEL || DEFAULT_LABEL;
+
+  // No-API-key embed. The `q=lat,lng(label)` syntax drops a labelled
+  // pin; `z=15` is street-level, `hl=bn` keeps the UI in Bangla.
+  const mapEmbedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(
+    `${lat},${lng}(${mapLabel})`
+  )}&z=15&hl=bn&output=embed`;
+  // Friendly external link — opens the full Google Maps app/site.
+  const mapHref = `https://www.google.com/maps/search/?api=1&query=${lat}%2C${lng}`;
 
   return (
     <>
@@ -64,16 +92,32 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* Map embed (Nachole, Chapainawabganj) */}
+      {/* Map embed (Nijampur, Nachole, Chapainawabganj) */}
       <section className="container-x pb-16">
         <div className="rounded-3xl overflow-hidden glass">
           <iframe
-            src="https://www.google.com/maps?q=Nijampur,Nachole,Chapainawabganj,Bangladesh&output=embed"
+            src={mapEmbedSrc}
             className="w-full h-[360px] border-0"
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
-            title="নিজামপুর, নাচোল, চাঁপাইনবাবগঞ্জ"
+            allowFullScreen
+            title={mapLabel}
           />
+          <div className="flex items-center justify-between gap-3 px-5 py-3 bg-white/60 border-t border-mango-200/60 flex-wrap">
+            <div className="flex items-start gap-2 text-sm text-ink/70 min-w-0">
+              <MapPin className="h-4 w-4 text-mango-600 mt-0.5 shrink-0" />
+              <span className="truncate">{mapLabel}</span>
+            </div>
+            <a
+              href={mapHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-full bg-mango-gradient px-4 py-1.5 text-xs font-bold text-ink shadow-soft hover:scale-105 transition shrink-0"
+            >
+              Google Maps-এ দেখুন
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          </div>
         </div>
       </section>
     </>
