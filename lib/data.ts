@@ -1,4 +1,10 @@
-import type { Mango, ProductRatingStats, ProductReview, Testimonial } from "@/types";
+import type {
+  MarqueeItem,
+  Mango,
+  ProductRatingStats,
+  ProductReview,
+  Testimonial
+} from "@/types";
 
 const ORIGIN = "নিজামপুর, নাচোল, চাঁপাইনবাবগঞ্জ, বাংলাদেশ";
 
@@ -258,5 +264,84 @@ export async function getProductRatingStats(
     };
   } catch {
     return { average: 5, count: 0 };
+  }
+}
+
+
+
+/** Built-in fallback list. Used in dev / when Supabase is unreachable
+ *  so the marquee never goes blank. Same six items the migration seeds. */
+const MOCK_MARQUEES: MarqueeItem[] = [
+  {
+    id: "m1",
+    emoji: "🚚",
+    text: "সারাদেশে ফ্রী ডেলিভারি",
+    is_active: true,
+    sort_order: 10,
+    created_at: ""
+  },
+  {
+    id: "m2",
+    emoji: "🥭",
+    text: "চাঁপাইনবাবগঞ্জের প্রিমিয়াম আম",
+    is_active: true,
+    sort_order: 20,
+    created_at: ""
+  },
+  {
+    id: "m3",
+    emoji: "✨",
+    text: "১০০% গাছপাকা, কেমিক্যাল-মুক্ত",
+    is_active: true,
+    sort_order: 30,
+    created_at: ""
+  },
+  {
+    id: "m4",
+    emoji: "📦",
+    text: "ন্যূনতম অর্ডার ১০ কেজি",
+    is_active: true,
+    sort_order: 40,
+    created_at: ""
+  },
+  {
+    id: "m5",
+    emoji: "🏆",
+    text: "GI ট্যাগ পাওয়া ক্ষীরসাপাত",
+    is_active: true,
+    sort_order: 50,
+    created_at: ""
+  },
+  {
+    id: "m6",
+    emoji: "🏡",
+    text: "সরাসরি বাগান থেকে আপনার দরজায়",
+    is_active: true,
+    sort_order: 60,
+    created_at: ""
+  }
+];
+
+/**
+ * Active marquee items, ordered by sort_order, for the public top
+ * promo strip. Falls back to MOCK_MARQUEES when Supabase isn't
+ * configured or returns no rows so the strip never renders empty.
+ */
+export async function getActiveMarquees(): Promise<MarqueeItem[]> {
+  try {
+    const { isSupabaseConfigured, createClient } = await import(
+      "@/lib/supabase/server"
+    );
+    if (!isSupabaseConfigured()) return MOCK_MARQUEES;
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("marquee_items")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
+    if (!data || data.length === 0) return MOCK_MARQUEES;
+    return data as MarqueeItem[];
+  } catch {
+    return MOCK_MARQUEES;
   }
 }

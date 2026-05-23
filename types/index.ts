@@ -81,6 +81,15 @@ export type PushSubscriptionRow = {
   created_at: string;
 };
 
+export type MarqueeItem = {
+  id: string;
+  emoji: string;
+  text: string;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+};
+
 /** Public-safe shape returned by the `track_order` RPC. */
 export type TrackedOrder = {
   id: string;

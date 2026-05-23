@@ -114,9 +114,11 @@ body {
   }
 }
 
-/* Top promo marquee — pure CSS infinite scroll */
+/* Top promo marquee — pure CSS infinite scroll.
+ * 22s loop is fast enough that customers don't think the strip is
+ * frozen but slow enough to read the longer Bengali phrases. */
 .marquee-track {
-  animation: marquee 38s linear infinite;
+  animation: marquee 22s linear infinite;
   will-change: transform;
 }
 @keyframes marquee {

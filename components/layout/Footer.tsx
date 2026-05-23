@@ -40,25 +40,39 @@ export default function Footer() {
             চাঁপাইনবাবগঞ্জের গাছপাকা, কেমিক্যাল-মুক্ত আম — সরাসরি আপনার দরজায়।
             ঐতিহ্যবাহী জাত থেকে হাইব্রিড, সবকিছু এখানে এক জায়গায়।
           </p>
-          <div className="flex gap-3 mt-5">
-            <a
-              href={facebookUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Facebook"
-              className="rounded-full bg-white p-2.5 border border-mango-200 hover:bg-mango-200 transition"
-            >
-              <Facebook className="h-4 w-4 text-mango-700" />
-            </a>
-            <a
-              href={tiktokUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="TikTok"
-              className="rounded-full bg-white p-2.5 border border-mango-200 hover:bg-mango-200 transition"
-            >
-              <TikTokIcon className="h-4 w-4 text-mango-700" />
-            </a>
+
+          {/*
+           * Bigger, branded social CTA. Was 4x4 grey icons in 2.5
+           * padding — too easy to miss. Now full-color brand pills
+           * with explicit "Follow on..." text so the click target
+           * is obvious and finger-friendly on mobile.
+           */}
+          <div className="mt-6">
+            <p className="text-xs uppercase tracking-wider text-mango-700 font-bold mb-3">
+              আমাদের ফলো করুন
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <a
+                href={facebookUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook এ ফলো করুন"
+                className="group inline-flex items-center gap-2.5 rounded-full bg-[#1877F2] px-5 py-3 text-sm font-semibold text-white shadow-soft hover:scale-105 hover:shadow-glow transition"
+              >
+                <Facebook className="h-5 w-5 fill-white" />
+                <span>Facebook</span>
+              </a>
+              <a
+                href={tiktokUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="TikTok এ ফলো করুন"
+                className="group inline-flex items-center gap-2.5 rounded-full bg-ink px-5 py-3 text-sm font-semibold text-white shadow-soft hover:scale-105 hover:shadow-glow transition"
+              >
+                <TikTokIcon className="h-5 w-5" />
+                <span>TikTok</span>
+              </a>
+            </div>
           </div>
         </div>
 
