@@ -1,28 +1,34 @@
 import type { Metadata } from "next";
-import {
-  Inter,
-  Playfair_Display,
-  Hind_Siliguri,
-  Noto_Serif_Bengali
-} from "next/font/google";
+import { Inter, Hind_Siliguri, Noto_Serif_Bengali } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import SiteShell from "@/components/layout/SiteShell";
 import { getSiteUrl, SITE } from "@/lib/site";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
-const playfair = Playfair_Display({
+// Font diet — was 4 families × ~15 files. PageSpeed flagged this as the
+// dominant LCP cost on mobile (Bengali fonts are large because the script
+// has many ligatures). We now ship 3 families × 7 files: Inter for Latin
+// body, Hind Siliguri for Bengali body, Noto Serif Bengali for the
+// Bengali display headlines. English display falls back to Georgia.
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-display"
+  weight: ["400", "600", "700"],
+  display: "swap",
+  variable: "--font-sans"
 });
 const hindSiliguri = Hind_Siliguri({
   subsets: ["bengali", "latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "700"],
+  display: "swap",
   variable: "--font-bangla"
 });
 const notoSerifBengali = Noto_Serif_Bengali({
   subsets: ["bengali"],
-  weight: ["400", "600", "700"],
+  weight: ["700"],
+  display: "swap",
+  // Make next/font subset a single weight from the variable font for
+  // smaller payload, and `preload: true` (default) injects the
+  // <link rel=preload> needed for the LCP H1.
   variable: "--font-bangla-display"
 });
 
@@ -128,7 +134,7 @@ export default function RootLayout({
   return (
     <html
       lang="bn"
-      className={`${inter.variable} ${playfair.variable} ${hindSiliguri.variable} ${notoSerifBengali.variable}`}
+      className={`${inter.variable} ${hindSiliguri.variable} ${notoSerifBengali.variable}`}
     >
       <body className="min-h-screen bg-cream text-ink">
         <SiteShell>{children}</SiteShell>
