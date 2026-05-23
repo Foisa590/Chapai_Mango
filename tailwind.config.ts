@@ -9,17 +9,22 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        // English display (brand etc.) — Playfair was dropped to cut LCP.
-        // Georgia is on every iOS/Android/Windows so the fallback is fine.
+        /*
+         * Display headlines (English brand text and Bengali h1/h2)
+         * resolve to Hind Siliguri 700 — same family as the body font,
+         * so headlines paint the moment the body font is available.
+         * Previously this was Noto Serif Bengali (a separate ~150 KB
+         * download); removing it was the largest single LCP win.
+         * Georgia is the system fallback for Latin glyphs.
+         */
         display: [
-          "var(--font-bangla-display)",
+          "var(--font-bangla)",
           "Georgia",
           "Cambria",
           "serif"
         ],
-        // Bengali display (section titles) — Noto Serif Bengali w/ 700.
         "display-bn": [
-          "var(--font-bangla-display)",
+          "var(--font-bangla)",
           "Georgia",
           "Cambria",
           "serif"
