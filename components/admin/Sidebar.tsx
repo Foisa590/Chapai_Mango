@@ -8,6 +8,8 @@ import {
   ShoppingBag,
   Package,
   MessageSquare,
+  Star,
+  Bell,
   LogOut,
   Menu,
   X,
@@ -20,7 +22,9 @@ const NAV = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/orders", label: "Orders", icon: ShoppingBag },
   { href: "/admin/products", label: "Products", icon: Package },
-  { href: "/admin/messages", label: "Messages", icon: MessageSquare }
+  { href: "/admin/reviews", label: "Reviews", icon: Star },
+  { href: "/admin/messages", label: "Messages", icon: MessageSquare },
+  { href: "/admin/notifications", label: "Notifications", icon: Bell }
 ];
 
 export default function Sidebar({ email }: { email: string }) {

@@ -78,6 +78,11 @@ export default function Footer() {
               </Link>
             </li>
             <li>
+              <Link href="/track" className="hover:text-mango-700">
+                অর্ডার ট্র্যাক
+              </Link>
+            </li>
+            <li>
               <Link href="/about" className="hover:text-mango-700">
                 আমাদের সম্পর্কে
               </Link>

@@ -5,7 +5,12 @@ import { ChevronLeft, MapPin, Calendar, Star, Leaf } from "lucide-react";
 import ProductGallery from "@/components/product/ProductGallery";
 import AddToCartControl from "@/components/product/AddToCartControl";
 import JsonLd from "@/components/seo/JsonLd";
-import { getProductBySlug, getProducts } from "@/lib/data";
+import ReviewSection from "@/components/product/ReviewSection";
+import {
+  getProductBySlug,
+  getProductRatingStats,
+  getProducts
+} from "@/lib/data";
 import { formatBDT } from "@/lib/utils";
 import { getSiteUrl, SITE } from "@/lib/site";
 
@@ -65,12 +70,19 @@ export default async function ProductDetailPage({
   const product = await getProductBySlug(params.slug);
   if (!product) notFound();
 
+  // Pull live rating stats so JSON-LD reflects real reviews. The DB
+  // trigger keeps `products.rating` and `products.review_count` in
+  // sync, so this is just a single-row read.
+  const ratingStats = await getProductRatingStats(product.id);
+
   const siteUrl = getSiteUrl();
   const productUrl = `${siteUrl}/products/${product.slug}`;
 
   // Schema.org Product markup so Google can render rich results
   // (price, stock status, rating stars) in search.
-  const productJsonLd = {
+  // Only attach AggregateRating if we have at least one real review —
+  // Google's rich-result validator rejects reviewCount=0.
+  const productJsonLd: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
@@ -98,17 +110,18 @@ export default async function ProductDetailPage({
         name: SITE.name,
         url: siteUrl
       }
-    },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: product.rating,
-      bestRating: 5,
-      worstRating: 1,
-      // We don't currently store individual review counts; surface a
-      // conservative count so Google has a non-zero value.
-      reviewCount: 12
     }
   };
+
+  if (ratingStats.count > 0) {
+    productJsonLd.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: ratingStats.average,
+      bestRating: 5,
+      worstRating: 1,
+      reviewCount: ratingStats.count
+    };
+  }
 
   // BreadcrumbList helps Google build the breadcrumb shown above the
   // result snippet (Home > Shop > Product Name).
@@ -128,6 +141,7 @@ export default async function ProductDetailPage({
   };
 
   return (
+    <>
     <section className="container-x pt-8 pb-20">
       <JsonLd data={productJsonLd} />
       <JsonLd data={breadcrumbJsonLd} />
@@ -153,8 +167,18 @@ export default async function ProductDetailPage({
           <div className="mt-3 flex items-center gap-4 text-sm flex-wrap">
             <span className="flex items-center gap-1">
               <Star className="h-4 w-4 fill-mango-500 text-mango-500" />
-              <span className="font-semibold">{product.rating.toFixed(1)}</span>
+              <span className="font-semibold">
+                {ratingStats.average.toFixed(1)}
+              </span>
               <span className="text-ink/50">/ ৫</span>
+              {ratingStats.count > 0 && (
+                <a
+                  href="#reviews"
+                  className="ml-1 text-ink/50 hover:text-mango-700 underline-offset-2 hover:underline"
+                >
+                  ({ratingStats.count}টি রিভিউ)
+                </a>
+              )}
             </span>
             <span className="text-ink/40">·</span>
             <span className="text-ink/60">
@@ -203,6 +227,8 @@ export default async function ProductDetailPage({
         </div>
       </div>
     </section>
+    <ReviewSection productId={product.id} productSlug={product.slug} />
+    </>
   );
 }
 

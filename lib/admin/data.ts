@@ -114,3 +114,62 @@ export async function fetchAdminMessages() {
     .order("created_at", { ascending: false });
   return (data || []) as AdminMessage[];
 }
+
+
+
+// ----- Reviews -----
+
+export type AdminReview = {
+  id: string;
+  product_id: string;
+  product_name?: string;
+  product_slug?: string;
+  user_id: string | null;
+  author_name: string;
+  rating: number;
+  title: string | null;
+  body: string;
+  is_approved: boolean;
+  created_at: string;
+};
+
+export async function fetchAdminReviews() {
+  if (!isSupabaseConfigured()) return [] as AdminReview[];
+  const supabase = createClient();
+  // Hand-rolled join: pull reviews + a tiny products lookup so the admin
+  // page can show "নাম (slug)" without a second round-trip per row.
+  const { data: reviews } = await supabase
+    .from("product_reviews")
+    .select("*")
+    .order("created_at", { ascending: false });
+  const list = (reviews || []) as AdminReview[];
+  if (list.length === 0) return list;
+
+  const ids = Array.from(new Set(list.map((r) => r.product_id)));
+  const { data: products } = await supabase
+    .from("products")
+    .select("id,name,slug")
+    .in("id", ids);
+  const byId = new Map(
+    (products || []).map((p: { id: string; name: string; slug: string }) => [
+      p.id,
+      p
+    ])
+  );
+  return list.map((r) => ({
+    ...r,
+    product_name: byId.get(r.product_id)?.name,
+    product_slug: byId.get(r.product_id)?.slug
+  }));
+}
+
+// ----- Push subscribers -----
+
+export async function fetchPushSubscriberCount() {
+  if (!isSupabaseConfigured()) return 0;
+  const supabase = createClient();
+  const { count } = await supabase
+    .from("push_subscriptions")
+    .select("id", { count: "exact", head: true });
+  return count || 0;
+}
