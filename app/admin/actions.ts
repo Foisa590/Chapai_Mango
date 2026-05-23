@@ -281,3 +281,88 @@ export async function sendBroadcastPushAction(
 
   return { ok: true, sent, removed, total };
 }
+
+
+
+// ----- Marquee items (admin manage) -----
+
+export type MarqueeInput = {
+  emoji: string;
+  text: string;
+  is_active: boolean;
+  sort_order: number;
+};
+
+export async function upsertMarqueeAction(
+  input: MarqueeInput,
+  marqueeId?: string
+) {
+  if (!isSupabaseConfigured()) {
+    return { error: "Supabase not configured" };
+  }
+  const trimmed = input.text.trim();
+  if (!trimmed) return { error: "Text cannot be empty" };
+  if (trimmed.length > 200) return { error: "Text too long (max 200 chars)" };
+
+  const supabase = createClient();
+  const payload = {
+    emoji: (input.emoji || "✨").trim().slice(0, 8),
+    text: trimmed,
+    is_active: !!input.is_active,
+    sort_order: Number(input.sort_order) || 0
+  };
+
+  if (marqueeId) {
+    const { error } = await supabase
+      .from("marquee_items")
+      .update(payload)
+      .eq("id", marqueeId);
+    if (error) return { error: error.message };
+  } else {
+    const { error } = await supabase.from("marquee_items").insert(payload);
+    if (error) return { error: error.message };
+  }
+
+  revalidatePath("/admin/marquees");
+  // Marquee is rendered in SiteShell on every public page — bust the
+  // root + a couple of high-traffic ones so the change shows up fast.
+  revalidatePath("/");
+  revalidatePath("/products");
+  revalidatePath("/about");
+  return { ok: true };
+}
+
+export async function deleteMarqueeAction(marqueeId: string) {
+  if (!isSupabaseConfigured()) {
+    return { error: "Supabase not configured" };
+  }
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("marquee_items")
+    .delete()
+    .eq("id", marqueeId);
+  if (error) return { error: error.message };
+  revalidatePath("/admin/marquees");
+  revalidatePath("/");
+  revalidatePath("/products");
+  return { ok: true };
+}
+
+export async function toggleMarqueeAction(
+  marqueeId: string,
+  isActive: boolean
+) {
+  if (!isSupabaseConfigured()) {
+    return { error: "Supabase not configured" };
+  }
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("marquee_items")
+    .update({ is_active: isActive })
+    .eq("id", marqueeId);
+  if (error) return { error: error.message };
+  revalidatePath("/admin/marquees");
+  revalidatePath("/");
+  revalidatePath("/products");
+  return { ok: true };
+}

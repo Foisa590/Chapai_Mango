@@ -173,3 +173,27 @@ export async function fetchPushSubscriberCount() {
     .select("id", { count: "exact", head: true });
   return count || 0;
 }
+
+
+
+// ----- Marquee items -----
+
+export type AdminMarquee = {
+  id: string;
+  emoji: string;
+  text: string;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+};
+
+export async function fetchAdminMarquees() {
+  if (!isSupabaseConfigured()) return [] as AdminMarquee[];
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("marquee_items")
+    .select("*")
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false });
+  return (data || []) as AdminMarquee[];
+}

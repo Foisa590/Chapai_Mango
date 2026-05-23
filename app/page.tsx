@@ -4,6 +4,7 @@ import WhyChooseUs from "@/components/home/WhyChooseUs";
 import Testimonials from "@/components/home/Testimonials";
 import CTA from "@/components/home/CTA";
 import RotatingHighlights from "@/components/promo/RotatingHighlights";
+import SocialFollow from "@/components/social/SocialFollow";
 import JsonLd from "@/components/seo/JsonLd";
 import { getProducts, getTestimonials } from "@/lib/data";
 import { getSiteUrl, SITE } from "@/lib/site";
@@ -72,6 +73,7 @@ export default async function HomePage() {
       <FeaturedMangoes products={featured.length ? featured : products} />
       <WhyChooseUs />
       <Testimonials testimonials={testimonials} />
+      <SocialFollow />
       <CTA />
     </>
   );

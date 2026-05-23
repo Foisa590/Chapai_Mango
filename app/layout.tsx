@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Hind_Siliguri, Noto_Serif_Bengali } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import SiteShell from "@/components/layout/SiteShell";
+import TopMarquee from "@/components/promo/TopMarquee";
 import { getSiteUrl, SITE } from "@/lib/site";
 import "./globals.css";
 
@@ -137,7 +138,7 @@ export default function RootLayout({
       className={`${inter.variable} ${hindSiliguri.variable} ${notoSerifBengali.variable}`}
     >
       <body className="min-h-screen bg-cream text-ink">
-        <SiteShell>{children}</SiteShell>
+        <SiteShell topMarquee={<TopMarquee />}>{children}</SiteShell>
         <Toaster
           position="top-center"
           toastOptions={{
