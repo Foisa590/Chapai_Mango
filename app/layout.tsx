@@ -101,11 +101,19 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.ico"
   },
-  // Add Search Console / Bing webmaster verification codes via env vars
-  // so we don't commit them to git. Empty values are fine — Next.js will
-  // simply omit the meta tag.
+  // Search Console / Bing Webmaster verification.
+  //
+  // These tokens are NOT secrets — Google literally generates them so they
+  // can be embedded in public HTML. Hard-coding avoids the NEXT_PUBLIC_*
+  // build-time gotcha where adding the env var to Railway after the build
+  // does nothing until the next rebuild.
+  //
+  // Env vars still take precedence (so future tokens / Bing / replatforms
+  // can be done without a code change), but we ship a working default.
   verification: {
-    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+    google:
+      process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ??
+      "E4XN4uKoTsmPfq3PrWTM81uEnJDpQ2iTDELFRZ-HuoI",
     other: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
       ? { "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION }
       : undefined
