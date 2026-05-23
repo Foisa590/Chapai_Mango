@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   CheckCircle2,
   Clock,
+  Copy,
   Loader2,
   PackageCheck,
   Search,
@@ -27,19 +29,34 @@ const STEPS: {
   { key: "delivered", label: "ডেলিভার্ড", icon: PackageCheck }
 ];
 
+/**
+ * Wrapper that satisfies Next.js's requirement that any client component
+ * using useSearchParams() be rendered inside a Suspense boundary on a
+ * statically-generated page (which /track is).
+ */
 export default function TrackingForm() {
-  const [orderId, setOrderId] = useState("");
-  const [phone, setPhone] = useState("");
+  return (
+    <Suspense fallback={<div className="glass rounded-3xl p-6 h-32 animate-pulse" />}>
+      <TrackingFormInner />
+    </Suspense>
+  );
+}
+
+function TrackingFormInner() {
+  const search = useSearchParams();
+  // Pre-fill from /orders -> "Track" link, so the customer never has to
+  // hand-copy a UUID. Both id and phone are optional.
+  const [orderId, setOrderId] = useState(() => search.get("id") || "");
+  const [phone, setPhone] = useState(() => search.get("phone") || "");
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<TrackedOrder | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const runLookup = (id: string, ph: string) => {
     setError(null);
     setResult(null);
     startTransition(async () => {
-      const res = await trackOrderAction(orderId, phone);
+      const res = await trackOrderAction(id, ph);
       if ("error" in res) {
         setError(res.error);
         toast.error(res.error);
@@ -47,6 +64,19 @@ export default function TrackingForm() {
         setResult(res.order);
       }
     });
+  };
+
+  // If both query params are present, auto-run the lookup so deep-links
+  // from /orders show the timeline immediately.
+  useEffect(() => {
+    if (orderId && phone) runLookup(orderId, phone);
+    // We intentionally only auto-run on first mount, not on every keystroke.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    runLookup(orderId, phone);
   };
 
   const currentStep =
@@ -71,7 +101,7 @@ export default function TrackingForm() {
               placeholder="00000000-0000-0000-0000-000000000000"
             />
             <p className="text-[11px] text-ink/40 mt-1">
-              অর্ডার কনফার্মেশনে যে UUID পেয়েছিলেন সেটা পেস্ট করুন।
+              অর্ডার কনফার্মেশনে পাওয়া পুরো UUID পেস্ট করুন (৩৬ অক্ষর)।
             </p>
           </div>
           <div>
@@ -111,12 +141,25 @@ export default function TrackingForm() {
       {result && (
         <div className="glass rounded-3xl p-6">
           <div className="flex items-start justify-between gap-4 flex-wrap mb-4">
-            <div>
+            <div className="min-w-0">
               <div className="text-[11px] uppercase tracking-wider text-mango-600 font-semibold">
                 অর্ডার আইডি
               </div>
-              <div className="font-mono text-sm mt-0.5">
-                #{result.id.slice(0, 8)}
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="font-mono text-xs sm:text-sm break-all">
+                  {result.id}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(result.id);
+                    toast.success("আইডি কপি হয়েছে");
+                  }}
+                  className="grid place-items-center h-7 w-7 rounded-full bg-white border border-mango-200 hover:bg-mango-100 shrink-0"
+                  aria-label="কপি করুন"
+                >
+                  <Copy className="h-3.5 w-3.5 text-mango-700" />
+                </button>
               </div>
               <div className="text-xs text-ink/50 mt-1">
                 {new Date(result.created_at).toLocaleString("en-BD", {

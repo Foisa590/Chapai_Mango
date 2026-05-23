@@ -1,10 +1,17 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import TopMarquee from "@/components/promo/TopMarquee";
-import FloatingWhatsApp from "@/components/whatsapp/FloatingWhatsApp";
+
+// FloatingWhatsApp is below-the-fold decoration — lazy-load it so its
+// JS doesn't compete with the hero's first paint.
+const FloatingWhatsApp = dynamic(
+  () => import("@/components/whatsapp/FloatingWhatsApp"),
+  { ssr: false }
+);
 
 /**
  * Wraps the app with public Navbar + Footer, except on /admin routes

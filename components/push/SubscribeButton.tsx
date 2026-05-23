@@ -35,7 +35,10 @@ export default function SubscribeButton({
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    let idleId: number | null = null;
+    let timeoutId: number | null = null;
+
+    const init = async () => {
       if (
         typeof window === "undefined" ||
         !("serviceWorker" in navigator) ||
@@ -62,9 +65,33 @@ export default function SubscribeButton({
         console.error("[push] init failed:", err);
         if (!cancelled) setState("unsupported");
       }
-    })();
+    };
+
+    // Defer service-worker registration until the browser is idle so
+    // it doesn't compete with the rest of the home page for the main
+    // thread during initial load. This was costing ~10 PageSpeed
+    // points on mobile previously.
+    const ric =
+      typeof window !== "undefined" &&
+      typeof window.requestIdleCallback === "function"
+        ? window.requestIdleCallback
+        : null;
+    if (ric) {
+      idleId = ric.call(window, init, { timeout: 2500 });
+    } else if (typeof window !== "undefined") {
+      timeoutId = window.setTimeout(init, 1200);
+    }
+
     return () => {
       cancelled = true;
+      if (idleId !== null && typeof window !== "undefined") {
+        if (typeof window.cancelIdleCallback === "function") {
+          window.cancelIdleCallback(idleId);
+        }
+      }
+      if (timeoutId !== null && typeof window !== "undefined") {
+        window.clearTimeout(timeoutId);
+      }
     };
   }, [vapidKey]);
 
