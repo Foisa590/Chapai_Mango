@@ -1,6 +1,3 @@
-"use client";
-
-import { motion } from "framer-motion";
 import {
   Leaf,
   PackageCheck,
@@ -43,6 +40,13 @@ const FEATURES = [
   }
 ];
 
+/**
+ * "Why choose us" feature grid.
+ *
+ * Server component — was a client island only because of framer-motion's
+ * whileInView staggered fade. The CSS `animate-fade-up` keyframe gives
+ * the same effect with a per-card animationDelay, no JS required.
+ */
 export default function WhyChooseUs() {
   return (
     <section className="bg-gradient-to-b from-cream via-mango-50 to-cream py-20 sm:py-24">
@@ -59,13 +63,13 @@ export default function WhyChooseUs() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {FEATURES.map((f, i) => (
-            <motion.div
+            <div
               key={f.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.5, delay: i * 0.07 }}
-              className="glass rounded-3xl p-6 hover:shadow-glow transition-shadow group"
+              className="glass rounded-3xl p-6 hover:shadow-glow transition-shadow group animate-fade-up opacity-0"
+              style={{
+                animationDelay: `${i * 70}ms`,
+                animationFillMode: "forwards"
+              }}
             >
               <div className="inline-grid place-items-center h-12 w-12 rounded-2xl bg-mango-gradient text-ink shadow-glow group-hover:scale-110 transition">
                 <f.icon className="h-6 w-6" />
@@ -76,7 +80,7 @@ export default function WhyChooseUs() {
               <p className="mt-2 text-sm text-ink/60 leading-relaxed">
                 {f.desc}
               </p>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>
