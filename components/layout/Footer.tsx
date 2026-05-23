@@ -102,6 +102,11 @@ export default function Footer() {
               </Link>
             </li>
             <li>
+              <Link href="/team" className="hover:text-mango-700">
+                আমাদের টিম
+              </Link>
+            </li>
+            <li>
               <Link href="/contact" className="hover:text-mango-700">
                 যোগাযোগ
               </Link>

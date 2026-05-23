@@ -3,6 +3,7 @@ import type {
   Mango,
   ProductRatingStats,
   ProductReview,
+  TeamMember,
   Testimonial
 } from "@/types";
 
@@ -343,5 +344,86 @@ export async function getActiveMarquees(): Promise<MarqueeItem[]> {
     return data as MarqueeItem[];
   } catch {
     return MOCK_MARQUEES;
+  }
+}
+
+
+
+// ----- Team members -----
+
+const MOCK_TEAM: TeamMember[] = [
+  {
+    id: "tm1",
+    name: "MD FOISAL IQBAL",
+    role: "founder",
+    title: "প্রতিষ্ঠাতা ও পরিচালক",
+    bio: "তিন প্রজন্মের আম-চাষি পরিবারের সন্তান। চাঁপাইনবাবগঞ্জের ঐতিহ্যকে সারা দেশে পৌঁছে দেওয়ার লক্ষ্যেই Chapai Mango House।",
+    photo_url:
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600",
+    phone: null,
+    email: null,
+    facebook_url: null,
+    sort_order: 10,
+    is_active: true,
+    created_at: ""
+  },
+  {
+    id: "tm2",
+    name: "নাচোলের আম সরবরাহকারী দল",
+    role: "supplier",
+    title: "বাগান অংশীদার",
+    bio: "নিজামপুর, নাচোলের অভিজ্ঞ আম-চাষিরা — গাছপাকা, কেমিক্যাল-মুক্ত আম সংগ্রহের দায়িত্বে।",
+    photo_url:
+      "https://images.unsplash.com/photo-1591073113125-e46713c829ed?w=600",
+    phone: null,
+    email: null,
+    facebook_url: null,
+    sort_order: 20,
+    is_active: true,
+    created_at: ""
+  },
+  {
+    id: "tm3",
+    name: "ডেলিভারি ও সাপোর্ট টিম",
+    role: "member",
+    title: "কাস্টমার কেয়ার",
+    bio: "আপনার অর্ডার সঠিক সময়ে, নিরাপদে পৌঁছে দিতে দিন-রাত কাজ করে আমাদের ডেলিভারি ও সাপোর্ট টিম।",
+    photo_url:
+      "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=600",
+    phone: null,
+    email: null,
+    facebook_url: null,
+    sort_order: 30,
+    is_active: true,
+    created_at: ""
+  }
+];
+
+/**
+ * Active team members shown on the public /team page, ordered by
+ * (role priority, sort_order). Falls back to MOCK_TEAM in dev / when
+ * Supabase isn't configured so the page never renders empty.
+ *
+ * Role display priority is enforced on the page itself (founders
+ * first, then suppliers, then members), but we still order by
+ * sort_order inside each role so the operator can rearrange.
+ */
+export async function getActiveTeamMembers(): Promise<TeamMember[]> {
+  try {
+    const { isSupabaseConfigured, createClient } = await import(
+      "@/lib/supabase/server"
+    );
+    if (!isSupabaseConfigured()) return MOCK_TEAM;
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("team_members")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true });
+    if (!data || data.length === 0) return MOCK_TEAM;
+    return data as TeamMember[];
+  } catch {
+    return MOCK_TEAM;
   }
 }

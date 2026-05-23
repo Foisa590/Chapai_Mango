@@ -11,6 +11,7 @@ import {
   Star,
   Bell,
   Megaphone,
+  Users,
   LogOut,
   Menu,
   X,
@@ -26,6 +27,7 @@ const NAV = [
   { href: "/admin/reviews", label: "Reviews", icon: Star },
   { href: "/admin/messages", label: "Messages", icon: MessageSquare },
   { href: "/admin/marquees", label: "Marquees", icon: Megaphone },
+  { href: "/admin/team", label: "Team", icon: Users },
   { href: "/admin/notifications", label: "Notifications", icon: Bell }
 ];
 
