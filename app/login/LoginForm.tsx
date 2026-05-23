@@ -1,24 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Loader2, LogIn, Mail, Smartphone } from "lucide-react";
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
 import { isValidBdPhone, normalizeBdPhone } from "@/lib/phone";
 import { cn } from "@/lib/utils";
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
 type AuthMode = "phone" | "email";
 
 export default function LoginForm() {
   const search = useSearchParams();
   const next = search.get("next") || "/orders";
+  const oauthError = search.get("error");
 
   const [mode, setMode] = useState<AuthMode>("phone");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Surface errors bounced back from /auth/callback (e.g. Google OAuth failed).
+  useEffect(() => {
+    if (oauthError) {
+      setError(oauthError);
+      toast.error("সাইন ইন করা যায়নি");
+    }
+  }, [oauthError]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,6 +75,19 @@ export default function LoginForm() {
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
+      <GoogleSignInButton next={next} />
+
+      <div className="relative my-1">
+        <div className="absolute inset-0 flex items-center" aria-hidden="true">
+          <div className="w-full border-t border-mango-200" />
+        </div>
+        <div className="relative flex justify-center">
+          <span className="bg-white px-3 text-xs font-semibold uppercase tracking-wide text-ink/40">
+            অথবা
+          </span>
+        </div>
+      </div>
+
       <div>
         <label className="block text-xs font-semibold text-ink/70 mb-2">
           কী দিয়ে সাইন ইন করবেন?
