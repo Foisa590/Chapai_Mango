@@ -189,18 +189,76 @@ export async function getProductBySlug(slug: string): Promise<Mango | null> {
   return MOCK_PRODUCTS.find((p) => p.slug === slug) ?? null;
 }
 
+/**
+ * Customer testimonials shown on the home page.
+ *
+ * Source of truth is now the `product_reviews` table — the same
+ * reviews customers post on /products/[slug]. As soon as a review is
+ * approved, the home page re-validates and the new feedback appears
+ * here automatically. We never store hand-curated testimonials any
+ * more — what you see is what real customers said.
+ *
+ * Filtering rules (kept conservative so the home strip stays
+ * presentable even with a small review pool):
+ *   - is_approved = true (admin gate)
+ *   - rating >= 4 (positive only — the home page is brand surface)
+ *   - body length >= 30 chars (one-word reviews look bad in cards)
+ *   - newest first, take 6 (Testimonials component shows 3 anyway)
+ *
+ * The legacy `testimonials` table query is gone. MOCK_TESTIMONIALS
+ * is still kept as a dev-only fallback for when Supabase isn't
+ * configured — in production (where Supabase IS configured but the
+ * shop is brand new and has no reviews yet) we return an empty
+ * array, and the home page hides the section entirely.
+ */
+type ReviewWithProduct = {
+  id: string;
+  author_name: string;
+  rating: number;
+  body: string;
+  created_at: string;
+  product: { name: string; slug: string } | null;
+};
+
 export async function getTestimonials(): Promise<Testimonial[]> {
   try {
     const { isSupabaseConfigured, createClient } = await import(
       "@/lib/supabase/server"
     );
+    // Dev / unconfigured — show the mock so the section isn't empty.
     if (!isSupabaseConfigured()) return MOCK_TESTIMONIALS;
+
     const supabase = createClient();
-    const { data } = await supabase.from("testimonials").select("*").limit(6);
-    if (!data || data.length === 0) return MOCK_TESTIMONIALS;
-    return data as Testimonial[];
+    const { data, error } = await supabase
+      .from("product_reviews")
+      .select(
+        "id, author_name, rating, body, created_at, product:products(name, slug)"
+      )
+      .eq("is_approved", true)
+      .gte("rating", 4)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    if (error || !data) return [];
+
+    const rows = data as unknown as ReviewWithProduct[];
+    return rows
+      .filter((r) => (r.body || "").trim().length >= 30)
+      .slice(0, 6)
+      .map((r) => ({
+        id: r.id,
+        name: r.author_name || "গ্রাহক",
+        // Show the product the review is for as the secondary line —
+        // works as a "verified buyer of X" social-proof signal.
+        location: r.product?.name
+          ? `${r.product.name} এর গ্রাহক`
+          : "যাচাইকৃত গ্রাহক",
+        message: r.body,
+        rating: Math.max(1, Math.min(5, Math.round(r.rating)))
+      }));
   } catch {
-    return MOCK_TESTIMONIALS;
+    // Network / RLS hiccup — fail closed (empty), home page hides the section.
+    return [];
   }
 }
 

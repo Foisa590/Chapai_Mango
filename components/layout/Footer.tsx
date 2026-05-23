@@ -111,6 +111,11 @@ export default function Footer() {
                 যোগাযোগ
               </Link>
             </li>
+            <li>
+              <Link href="/privacy" className="hover:text-mango-700">
+                প্রাইভেসি পলিসি
+              </Link>
+            </li>
           </ul>
         </div>
 

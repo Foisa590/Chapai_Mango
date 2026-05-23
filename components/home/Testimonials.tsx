@@ -1,9 +1,16 @@
-"use client";
-
-import { motion } from "framer-motion";
 import { Quote, Star } from "lucide-react";
 import type { Testimonial } from "@/types";
 
+/**
+ * Customer testimonials strip.
+ *
+ * Server component on purpose: previously this was a "use client"
+ * island just for framer-motion's whileInView fade. That dragged
+ * ~50 KB of JS onto the home page for a single scroll animation.
+ * The CSS-only `animate-fade-up` (defined in tailwind.config) plays
+ * once on mount with a per-card delay and looks indistinguishable
+ * from the JS version on a normal-speed connection.
+ */
 export default function Testimonials({
   testimonials
 }: {
@@ -22,13 +29,13 @@ export default function Testimonials({
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {testimonials.slice(0, 3).map((t, i) => (
-          <motion.div
+          <div
             key={t.id}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: i * 0.1 }}
-            className="relative glass rounded-3xl p-7 overflow-hidden"
+            className="relative glass rounded-3xl p-7 overflow-hidden animate-fade-up opacity-0"
+            style={{
+              animationDelay: `${i * 100}ms`,
+              animationFillMode: "forwards"
+            }}
           >
             <Quote className="absolute -top-2 -right-2 h-20 w-20 text-mango-200/60" />
             <div className="relative">
@@ -50,7 +57,7 @@ export default function Testimonials({
                 <div className="text-xs text-ink/50">{t.location}</div>
               </div>
             </div>
-          </motion.div>
+          </div>
         ))}
       </div>
     </section>

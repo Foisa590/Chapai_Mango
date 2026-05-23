@@ -72,7 +72,15 @@ export default async function HomePage() {
       <RotatingHighlights />
       <FeaturedMangoes products={featured.length ? featured : products} />
       <WhyChooseUs />
-      <Testimonials testimonials={testimonials} />
+      {/* Real customer reviews. Hidden until we have at least one
+          approved review with rating >=4 and a non-trivial body, so
+          the brand never shows an empty "What people are saying"
+          card in production. submitReviewAction in app/actions/reviews.ts
+          calls revalidatePath("/") so new reviews appear here on the
+          next render. */}
+      {testimonials.length > 0 && (
+        <Testimonials testimonials={testimonials} />
+      )}
       <SocialFollow />
       <CTA />
     </>

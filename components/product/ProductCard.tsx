@@ -1,19 +1,21 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { Star } from "lucide-react";
 import { formatBDT } from "@/lib/utils";
 import type { Mango } from "@/types";
 
+/**
+ * Product card used on the home page and the /products grid.
+ *
+ * Server component — the previous version wrapped this in a
+ * `motion.div` with `whileHover={{ y: -6 }}` purely so the card
+ * lifted on hover. That single visual flourish forced the entire
+ * /products page (and every home-page card) to ship framer-motion.
+ * Pure CSS hover-translate gives the same effect for free.
+ */
 export default function ProductCard({ product }: { product: Mango }) {
   return (
-    <motion.div
-      whileHover={{ y: -6 }}
-      transition={{ type: "spring", stiffness: 300 }}
-      className="group relative overflow-hidden rounded-3xl glass hover:shadow-glow transition-shadow"
-    >
+    <div className="group relative overflow-hidden rounded-3xl glass hover:shadow-glow hover:-translate-y-1.5 transition-all duration-300">
       <Link href={`/products/${product.slug}`} className="block">
         <div className="relative aspect-square overflow-hidden bg-mango-100">
           <Image
@@ -56,6 +58,6 @@ export default function ProductCard({ product }: { product: Mango }) {
           </div>
         </div>
       </Link>
-    </motion.div>
+    </div>
   );
 }
