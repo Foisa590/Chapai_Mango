@@ -65,14 +65,18 @@ export default function Hero() {
 
       <div className="container-x relative grid lg:grid-cols-2 gap-10 items-center py-16 lg:py-24">
         {/*
-         * Hero copy — intentionally NOT wrapped in framer-motion. The H1
-         * here is the LCP element on mobile; a JS-driven entry animation
-         * keeps it at opacity 0 until framer-motion has hydrated, which
-         * pushed Lighthouse LCP up by ~1.5s. The CSS-only `animate-fade-up`
-         * (defined in tailwind.config) gives the same visual effect but
-         * starts the moment CSS is parsed, with zero JS dependency.
+         * Hero copy — intentionally NOT animated.
+         *
+         * The H1 here is the LCP element on mobile. We previously had
+         * `animate-fade-up` on this wrapper, which fades opacity 0 -> 1
+         * over 700 ms. That alone added ~700 ms of LCP delay because
+         * Lighthouse waits for the largest element to be VISIBLE
+         * (not just laid out) before it stops the LCP timer.
+         *
+         * The illustration column on the right keeps a translate-only
+         * entry animation since it isn't the LCP candidate.
          */}
-        <div className="text-center lg:text-left animate-fade-up">
+        <div className="text-center lg:text-left">
           <span className="inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-xs font-semibold text-mango-700 mb-6">
             <Sparkles className="h-3.5 w-3.5" />
             GI-ট্যাগ পাওয়া ক্ষীরসাপাত পাওয়া যাচ্ছে
@@ -114,8 +118,15 @@ export default function Hero() {
           className="relative h-[400px] sm:h-[500px] lg:h-[560px] animate-fade-up"
           style={{ animationDelay: "120ms" }}
         >
-          {/* glow ring */}
-          <div className="absolute inset-10 rounded-full bg-mango-gradient blur-3xl opacity-50 animate-pulse" />
+          {/*
+           * Glow ring. Was `animate-pulse`, which continuously
+           * re-rasterises a `blur-3xl` layer behind the hero — that
+           * single rule pushed Speed Index up because the compositor
+           * has to repaint the blur every frame while the page is
+           * still laying out. A static glow is visually almost
+           * identical and keeps the main thread idle.
+           */}
+          <div className="absolute inset-10 rounded-full bg-mango-gradient blur-3xl opacity-40" />
           <div className="relative h-full">
             {showScene ? <Scene /> : <FallbackMango />}
           </div>

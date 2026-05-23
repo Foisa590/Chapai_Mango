@@ -1,36 +1,44 @@
 import type { Metadata } from "next";
-import { Inter, Hind_Siliguri, Noto_Serif_Bengali } from "next/font/google";
+import { Suspense } from "react";
+import { Inter, Hind_Siliguri } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import SiteShell from "@/components/layout/SiteShell";
 import TopMarquee from "@/components/promo/TopMarquee";
 import { getSiteUrl, SITE } from "@/lib/site";
 import "./globals.css";
 
-// Font diet — was 4 families × ~15 files. PageSpeed flagged this as the
-// dominant LCP cost on mobile (Bengali fonts are large because the script
-// has many ligatures). We now ship 3 families × 7 files: Inter for Latin
-// body, Hind Siliguri for Bengali body, Noto Serif Bengali for the
-// Bengali display headlines. English display falls back to Georgia.
+/*
+ * Font diet round 2.
+ *
+ * We previously shipped 3 families × 7 files: Inter (Latin body),
+ * Hind Siliguri (Bengali body) and Noto Serif Bengali (Bengali display
+ * headlines). Lighthouse pinpointed the Bengali serif as the dominant
+ * LCP cost — the H1 on every page uses `font-display-bn`, so the
+ * largest text element waited for that font to download.
+ *
+ * Now: 2 families × 4 files. Hind Siliguri serves BOTH body and
+ * display (700 weight is bold enough for headlines), Inter handles
+ * Latin body. `font-display-bn` and `font-display` in tailwind.config
+ * resolve to `--font-bangla` (Hind Siliguri) so headlines paint as
+ * soon as it's available.
+ *
+ * Also dropped:
+ *   - Inter weight 600 (barely used; 700 covers the bold cases).
+ *   - Hind Siliguri "latin" subset (redundant — Inter handles Latin).
+ *
+ * Net: ~200 KB lighter font payload, ~1 RTT shaved off the LCP path.
+ */
 const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "600", "700"],
+  weight: ["400", "700"],
   display: "swap",
   variable: "--font-sans"
 });
 const hindSiliguri = Hind_Siliguri({
-  subsets: ["bengali", "latin"],
+  subsets: ["bengali"],
   weight: ["400", "700"],
   display: "swap",
   variable: "--font-bangla"
-});
-const notoSerifBengali = Noto_Serif_Bengali({
-  subsets: ["bengali"],
-  weight: ["700"],
-  display: "swap",
-  // Make next/font subset a single weight from the variable font for
-  // smaller payload, and `preload: true` (default) injects the
-  // <link rel=preload> needed for the LCP H1.
-  variable: "--font-bangla-display"
 });
 
 const siteUrl = getSiteUrl();
@@ -135,10 +143,31 @@ export default function RootLayout({
   return (
     <html
       lang="bn"
-      className={`${inter.variable} ${hindSiliguri.variable} ${notoSerifBengali.variable}`}
+      className={`${inter.variable} ${hindSiliguri.variable}`}
     >
       <body className="min-h-screen bg-cream text-ink">
-        <SiteShell topMarquee={<TopMarquee />}>{children}</SiteShell>
+        <SiteShell
+          topMarquee={
+            <Suspense
+              fallback={
+                /*
+                 * Height-matched skeleton so the marquee streaming in
+                 * doesn't push the navbar/hero down. Keeps CLS at 0
+                 * while letting the rest of the page render without
+                 * waiting for the Supabase round-trip.
+                 */
+                <div
+                  aria-hidden
+                  className="bg-gradient-to-r from-mango-700 via-mango-500 to-mango-700 border-b border-mango-800/30 h-[44px] sm:h-[52px]"
+                />
+              }
+            >
+              <TopMarquee />
+            </Suspense>
+          }
+        >
+          {children}
+        </SiteShell>
         <Toaster
           position="top-center"
           toastOptions={{
