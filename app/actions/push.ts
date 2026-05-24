@@ -56,17 +56,24 @@ export async function savePushSubscriptionAction(
   return { ok: true };
 }
 
-/** Best-effort cleanup when the user clicks "Unsubscribe" client-side. */
+/** Best-effort cleanup when the user clicks "Unsubscribe" client-side.
+ *
+ * Goes through the `unsubscribe_push(endpoint)` SECURITY DEFINER RPC
+ * instead of a direct DELETE on the table. Why: the old direct DELETE
+ * required an `using (true)` RLS policy on `push_subscriptions`,
+ * which let any anonymous visitor wipe the entire subscriber table
+ * with a single bulk DELETE. The RPC takes the endpoint as an
+ * argument so it can only ever delete the matching row. See
+ * supabase/security-fixes.sql for the full migration. */
 export async function deletePushSubscriptionAction(
   endpoint: string
 ): Promise<PushActionResult> {
   if (!isSupabaseConfigured()) return { error: "Supabase কনফিগার হয়নি" };
   if (!endpoint) return { error: "Missing endpoint" };
   const supabase = createClient();
-  const { error } = await supabase
-    .from("push_subscriptions")
-    .delete()
-    .eq("endpoint", endpoint);
+  const { error } = await supabase.rpc("unsubscribe_push", {
+    p_endpoint: endpoint
+  });
   if (error) return { error: error.message };
   return { ok: true };
 }
