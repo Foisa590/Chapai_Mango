@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowRight, Award, Sparkles } from "lucide-react";
+import HeroSlider from "./HeroSlider";
 
 // Three.js + react-three-fiber + drei together are ~150KB of JS to parse,
 // plus a continuous animation loop. On low-end Android phones this is the
@@ -16,11 +17,14 @@ const Scene = dynamic(() => import("@/components/3d/Scene"), {
   loading: () => <FallbackMango />
 });
 
-export default function Hero() {
+export default function Hero({ heroImages = [] }: { heroImages?: string[] }) {
   const [showScene, setShowScene] = useState(false);
+  const hasImages = heroImages.length > 0;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    // Skip 3D scene entirely when we have real product images
+    if (hasImages) return;
 
     // Only render the heavy 3D canvas on real desktops. Tablets and phones
     // get a lightweight CSS-animated mango — visually playful, near-zero
@@ -55,7 +59,7 @@ export default function Hero() {
       if (idleId !== null && cic) cic.call(window, idleId);
       if (timeoutId !== null) window.clearTimeout(timeoutId);
     };
-  }, []);
+  }, [hasImages]);
 
   return (
     <section className="relative overflow-hidden bg-hero-radial">
@@ -118,22 +122,27 @@ export default function Hero() {
           className="relative h-[400px] sm:h-[500px] lg:h-[560px] animate-fade-up"
           style={{ animationDelay: "120ms" }}
         >
-          {/*
-           * Glow ring. Was `animate-pulse`, which continuously
-           * re-rasterises a `blur-3xl` layer behind the hero — that
-           * single rule pushed Speed Index up because the compositor
-           * has to repaint the blur every frame while the page is
-           * still laying out. A static glow is visually almost
-           * identical and keeps the main thread idle.
-           */}
-          <div className="absolute inset-10 rounded-full bg-mango-gradient blur-3xl opacity-40" />
-          <div className="relative h-full">
-            {showScene ? <Scene /> : <FallbackMango />}
-          </div>
-          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 glass rounded-full px-5 py-2 text-xs font-medium text-ink/80 whitespace-nowrap">
-            {showScene
-              ? "ঘোরাতে ড্র্যাগ করুন · ১০০% গাছপাকা"
-              : "১০০% গাছপাকা · কেমিক্যাল-মুক্ত"}
+          {hasImages ? (
+            /* Real product images — auto-sliding carousel */
+            <HeroSlider images={heroImages} />
+          ) : (
+            <>
+              {/*
+               * Glow ring. Was `animate-pulse`, which continuously
+               * re-rasterises a `blur-3xl` layer behind the hero — that
+               * single rule pushed Speed Index up because the compositor
+               * has to repaint the blur every frame while the page is
+               * still laying out. A static glow is visually almost
+               * identical and keeps the main thread idle.
+               */}
+              <div className="absolute inset-10 rounded-full bg-mango-gradient blur-3xl opacity-40" />
+              <div className="relative h-full">
+                {showScene ? <Scene /> : <FallbackMango />}
+              </div>
+            </>
+          )}
+          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 glass rounded-full px-5 py-2 text-xs font-medium text-ink/80 whitespace-nowrap z-10">
+            ১০০% গাছপাকা · কেমিক্যাল-মুক্ত
           </div>
         </div>
       </div>

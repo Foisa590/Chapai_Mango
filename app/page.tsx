@@ -68,7 +68,7 @@ export default async function HomePage() {
     <>
       <JsonLd data={organizationJsonLd} />
       <JsonLd data={websiteJsonLd} />
-      <Hero />
+      <Hero heroImages={products.flatMap((p) => p.images).slice(0, 6)} />
       <RotatingHighlights />
       <FeaturedMangoes products={featured.length ? featured : products} />
       <WhyChooseUs />
