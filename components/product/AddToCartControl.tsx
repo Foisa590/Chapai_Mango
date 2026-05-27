@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Info, Minus, Plus, ShoppingBag } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Info, Minus, Plus, ShoppingBag, Zap } from "lucide-react";
 import toast from "react-hot-toast";
 import { useCart } from "@/store/cart-store";
 import { formatBDT } from "@/lib/utils";
@@ -14,18 +15,27 @@ export default function AddToCartControl({ product }: { product: Mango }) {
   const initial = Math.max(1, config.minOrderKg || 1);
   const [qty, setQty] = useState(initial);
   const add = useCart((s) => s.add);
+  const router = useRouter();
+
+  const buildCartItem = () => ({
+    id: product.id,
+    slug: product.slug,
+    name: product.name,
+    variety: product.variety,
+    price_per_kg: product.price_per_kg,
+    image: product.images[0] || "",
+    quantity_kg: qty
+  });
 
   const handleAdd = () => {
-    add({
-      id: product.id,
-      slug: product.slug,
-      name: product.name,
-      variety: product.variety,
-      price_per_kg: product.price_per_kg,
-      image: product.images[0] || "",
-      quantity_kg: qty
-    });
+    add(buildCartItem());
     toast.success(`${qty} কেজি ${product.name} কার্টে যোগ হয়েছে`);
+  };
+
+  /** "Buy Now" — add to cart and go straight to checkout. */
+  const handleBuyNow = () => {
+    add(buildCartItem());
+    router.push("/checkout");
   };
 
   const total = product.price_per_kg * qty;
@@ -77,6 +87,14 @@ export default function AddToCartControl({ product }: { product: Mango }) {
       <button onClick={handleAdd} className="btn-primary w-full text-base py-4">
         <ShoppingBag className="h-5 w-5" />
         কার্টে যোগ করুন
+      </button>
+
+      <button
+        onClick={handleBuyNow}
+        className="w-full inline-flex items-center justify-center gap-2 rounded-full border-2 border-mango-500 bg-mango-50 px-6 py-4 text-base font-semibold text-mango-700 shadow-soft transition-all hover:bg-mango-100 hover:scale-[1.02] active:scale-95"
+      >
+        <Zap className="h-5 w-5" />
+        এখনই কিনুন
       </button>
     </div>
   );
