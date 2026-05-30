@@ -12,7 +12,6 @@ import {
   Bell,
   Megaphone,
   Users,
-  CreditCard,
   FileText,
   LogOut,
   Menu,
@@ -22,6 +21,9 @@ import {
 import { signOutAction } from "@/app/admin/actions";
 import { cn } from "@/lib/utils";
 
+// Note: there's no /admin/payment-methods entry — payment config
+// (numbers, advance amounts, on/off toggles) is operator-managed via
+// Railway env vars now (see lib/config.ts and .env.local.example).
 const NAV = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/orders", label: "Orders", icon: ShoppingBag },
@@ -30,7 +32,6 @@ const NAV = [
   { href: "/admin/messages", label: "Messages", icon: MessageSquare },
   { href: "/admin/marquees", label: "Marquees", icon: Megaphone },
   { href: "/admin/team", label: "Team", icon: Users },
-  { href: "/admin/payment-methods", label: "Payments", icon: CreditCard },
   { href: "/admin/refund-policy", label: "Refund Policy", icon: FileText },
   { href: "/admin/notifications", label: "Notifications", icon: Bell }
 ];

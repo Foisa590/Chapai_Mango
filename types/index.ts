@@ -24,6 +24,15 @@ export type CartItem = {
   quantity_kg: number;
 };
 
+/**
+ * Payment method codes accepted by the orders table.
+ *
+ * Configuration (receiving number, fixed advance amount, instructions)
+ * is driven entirely by NEXT_PUBLIC_<CODE>_NUMBER and
+ * NEXT_PUBLIC_<CODE>_ADVANCE env vars — see lib/config.ts. The operator
+ * adds them at deploy time on Railway and the values flow into both
+ * /checkout and the footer "We Accept" strip on the next render.
+ */
 export type PaymentMethod =
   | "cod"
   | "bkash"
@@ -123,47 +132,6 @@ export type TrackedOrder = {
   total: number;
   payment_method: PaymentMethod;
   created_at: string;
-};
-
-
-
-/**
- * Admin-managed payment method shown on /checkout and editable
- * from /admin/payment-methods. The `code` matches the
- * `PaymentMethod` union for built-ins; custom methods can pick
- * any new lowercase code (Postgres enforces the regex in
- * supabase/payment-methods.sql).
- *
- * `account_number` is the receiving number (MFS) or short
- * account string (bank). When blank we fall through to the
- * legacy NEXT_PUBLIC_<CODE>_NUMBER env var on the public site.
- *
- * `advance_amount` is the fixed BDT amount the customer pays
- * UP FRONT before the order ships — useful for COD bookings
- * (e.g. 100 BDT advance via bKash) or full prepaid via bank.
- * 0 means no advance required.
- */
-export type PaymentIconKey =
-  | "cod"
-  | "bkash"
-  | "nagad"
-  | "rocket"
-  | "upay"
-  | "bank"
-  | "generic";
-
-export type PaymentMethodConfig = {
-  id: string;
-  code: string;
-  label: string;
-  account_number: string;
-  advance_amount: number;
-  instructions: string;
-  icon_key: PaymentIconKey;
-  is_active: boolean;
-  sort_order: number;
-  created_at: string;
-  updated_at: string;
 };
 
 /** Single-row admin-editable refund policy shown on /refund. */

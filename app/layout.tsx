@@ -119,19 +119,28 @@ export const metadata: Metadata = {
   },
   // Search Console / Bing Webmaster verification.
   //
-  // We previously hard-coded a Google verification token as a fallback,
-  // but that was tied to the old chapaimango-production.up.railway.app
-  // property and Google flagged it as duplicate when the operator
-  // re-verified the new custom domain (dealhub2026.shop) via the more
-  // reliable DNS TXT method. DNS TXT lives entirely in the registrar
-  // DNS zone and never expires, so we no longer need a meta-tag fallback.
+  // We support TWO Search Console verification methods at once because
+  // every operator hits a different gotcha:
   //
-  // The NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION env var is still honoured
-  // — set it in Railway if you ever want to re-enable HTML-tag
-  // verification on top of the DNS TXT (Google accepts multiple
-  // verification methods on the same property).
+  //   1) DNS TXT record — the operator adds
+  //        google-site-verification=<token>
+  //      to their domain's DNS zone. Most reliable for custom domains
+  //      and never expires. Doesn't need any code change to work.
+  //
+  //   2) HTML meta tag — Google reads the
+  //        <meta name="google-site-verification" content="<token>" />
+  //      we render below. Works regardless of DNS, useful as a backup
+  //      while DNS propagation is still settling.
+  //
+  // The hard-coded fallback is the same token currently set as the
+  // operator's DNS TXT record on dealhub2026.shop, so HTML-tag
+  // verification picks up the slack if the TXT record is misconfigured
+  // or hasn't propagated yet. Setting NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+  // in Railway overrides this default.
   verification: {
-    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+    google:
+      process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ??
+      "9l1HBSx0SpXFJUDl4Eq4YJ2CoOPA41pJO04mTiEd_20",
     other: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
       ? { "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION }
       : undefined
