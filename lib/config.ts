@@ -133,6 +133,10 @@ const METHOD_DEFAULTS: Record<
 > = {
   cod: {
     label: "ক্যাশ অন ডেলিভারি",
+    // NOTE: when NEXT_PUBLIC_COD_ADVANCE > 0 this default is replaced
+    // by an advance-aware fallback in `paymentMethodInfo()`. The
+    // operator can also override either case by setting
+    // NEXT_PUBLIC_COD_INSTRUCTIONS.
     instructions: "পণ্য পেয়ে কুরিয়ারের কাছে নগদ পরিশোধ করুন।"
   },
   bkash: {
@@ -167,6 +171,12 @@ const METHOD_DEFAULTS: Record<
  *  at build time and dynamic keys wouldn't resolve. */
 function readNumber(code: PaymentMethod): string {
   switch (code) {
+    case "cod":
+      // COD itself is "pay cash to courier", so this number is only
+      // meaningful when COD_ADVANCE > 0 — i.e. the operator wants a
+      // booking deposit sent via any MFS to this single number BEFORE
+      // shipping. When advance is 0 the checkout never shows it.
+      return (process.env.NEXT_PUBLIC_COD_NUMBER || "").trim();
     case "bkash":
       return (process.env.NEXT_PUBLIC_BKASH_NUMBER || "").trim();
     case "nagad":
@@ -202,6 +212,32 @@ function readAdvance(code: PaymentMethod): number {
       return 0;
   }
 }
+
+/**
+ * Optional per-method instruction override read from env. Returns ""
+ * when unset so callers can fall back to METHOD_DEFAULTS. Only COD is
+ * exposed today because every other rail has a single number + a
+ * generic Send-Money instruction that already fits the UI; COD is
+ * the special case where the deposit goes via SOME OTHER rail and
+ * the operator needs to spell out which.
+ */
+function readInstructionsOverride(code: PaymentMethod): string {
+  switch (code) {
+    case "cod":
+      return (process.env.NEXT_PUBLIC_COD_INSTRUCTIONS || "").trim();
+    default:
+      return "";
+  }
+}
+
+/**
+ * Sensible default helper text for COD when the operator has set an
+ * advance > 0 but hasn't provided their own NEXT_PUBLIC_COD_INSTRUCTIONS.
+ * Mentions every common MFS rail so the customer knows the listed
+ * number accepts any of them.
+ */
+const COD_WITH_ADVANCE_DEFAULT_INSTRUCTIONS =
+  "অগ্রিম bKash / Nagad / Rocket — যেকোনো রেলে এই নম্বরে Send Money করুন এবং TrxID দিন। বাকি টাকা পণ্য পেয়ে কুরিয়ারের কাছে নগদ পরিশোধ করুন।";
 
 // ─────────────────────────────────────────────────────────────────
 // Bank account — four structured env-var fields
@@ -270,14 +306,27 @@ function formatBankSummary(info: BankAccountInfo): string {
 /** Full info bundle for a single payment method. */
 export function paymentMethodInfo(code: PaymentMethod): PaymentMethodInfo {
   const def = METHOD_DEFAULTS[code];
+  const override = readInstructionsOverride(code);
+  const advance = readAdvance(code);
+
+  // For COD specifically, the default text ("পণ্য পেয়ে কুরিয়ারের কাছে
+  // নগদ পরিশোধ করুন।") is wrong when an advance is required, so swap
+  // in an advance-aware default. Operator override (when set) wins
+  // over both branches.
+  const instructions =
+    override ||
+    (code === "cod" && advance > 0
+      ? COD_WITH_ADVANCE_DEFAULT_INSTRUCTIONS
+      : def.instructions);
+
   if (code === "bank") {
     const bank = readBankInfo();
     return {
       code,
       label: def.label,
       accountNumber: formatBankSummary(bank),
-      advance: readAdvance(code),
-      instructions: def.instructions,
+      advance,
+      instructions,
       bankDetails: bank
     };
   }
@@ -285,8 +334,8 @@ export function paymentMethodInfo(code: PaymentMethod): PaymentMethodInfo {
     code,
     label: def.label,
     accountNumber: readNumber(code),
-    advance: readAdvance(code),
-    instructions: def.instructions
+    advance,
+    instructions
   };
 }
 
