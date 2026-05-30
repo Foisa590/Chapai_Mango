@@ -21,6 +21,7 @@ import {
 } from "@/lib/config";
 import PaymentBrandLogo from "@/components/payment/PaymentBrandLogo";
 import type { PaymentMethod } from "@/types";
+import type { BankAccountInfo } from "@/lib/config";
 import type { User } from "@supabase/supabase-js";
 
 const DISTRICTS = [
@@ -431,25 +432,43 @@ export default function CheckoutForm() {
                       </>
                     )}
                   </p>
-                  <div className="flex items-center gap-2 mt-2 mb-3 flex-wrap">
-                    <span className="font-display-bn text-xl sm:text-2xl font-bold text-mango-700 tracking-wider break-all">
-                      {receivingNumber || (
-                        <span className="text-orange-700/70 italic text-sm">
-                          নম্বর/অ্যাকাউন্ট সেট নেই — env-এ যোগ করুন
-                        </span>
+                  {selectedInfo.bankDetails ? (
+                    /*
+                     * Structured bank block. The four env-driven fields
+                     * (holder / bank / branch / account number) render
+                     * as a properly-labelled rows table so the customer
+                     * can read each one without parsing a long string.
+                     * Copy button is bound to the account number only —
+                     * that's the field the customer pastes into their
+                     * banking app.
+                     */
+                    <BankInfoBlock
+                      info={selectedInfo.bankDetails}
+                      onCopyAccount={() =>
+                        copy(selectedInfo.bankDetails?.accountNumber || "")
+                      }
+                    />
+                  ) : (
+                    <div className="flex items-center gap-2 mt-2 mb-3 flex-wrap">
+                      <span className="font-display-bn text-xl sm:text-2xl font-bold text-mango-700 tracking-wider break-all">
+                        {receivingNumber || (
+                          <span className="text-orange-700/70 italic text-sm">
+                            নম্বর/অ্যাকাউন্ট সেট নেই — env-এ যোগ করুন
+                          </span>
+                        )}
+                      </span>
+                      {receivingNumber && (
+                        <button
+                          type="button"
+                          onClick={() => copy(receivingNumber)}
+                          className="grid place-items-center h-9 w-9 rounded-full bg-white border border-mango-300 hover:bg-mango-100"
+                          aria-label="কপি করুন"
+                        >
+                          <Copy className="h-4 w-4 text-mango-700" />
+                        </button>
                       )}
-                    </span>
-                    {receivingNumber && (
-                      <button
-                        type="button"
-                        onClick={() => copy(receivingNumber)}
-                        className="grid place-items-center h-9 w-9 rounded-full bg-white border border-mango-300 hover:bg-mango-100"
-                        aria-label="কপি করুন"
-                      >
-                        <Copy className="h-4 w-4 text-mango-700" />
-                      </button>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
                   {selectedInfo.advance > 0 && selectedInfo.advance < total && (
                     <p className="text-xs text-ink/60 mb-3">
@@ -592,6 +611,70 @@ function Field({
       </label>
       {children}
       {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+    </div>
+  );
+}
+
+/**
+ * Structured display of bank-transfer details — Holder / Bank /
+ * Branch / Account Number rendered as labelled rows. Each field is
+ * driven by its own env var so the operator can swap accounts
+ * (different bank, different branch) without re-keying the others.
+ *
+ * The Account Number row gets a Copy button because that's the only
+ * field a customer pastes into their banking app — the rest are
+ * informational.
+ */
+function BankInfoBlock({
+  info,
+  onCopyAccount
+}: {
+  info: BankAccountInfo;
+  onCopyAccount: () => void;
+}) {
+  const acctNum = info.accountNumber.trim();
+  return (
+    <div className="rounded-xl bg-white/70 border border-mango-200 p-4 space-y-2 mt-3 mb-3">
+      <BankRow label="Bank Account Holder" value={info.holder} />
+      <BankRow label="Bank Name" value={info.bankName} />
+      <BankRow label="Branch" value={info.branch} />
+      <div className="grid grid-cols-[7.5rem_1fr_auto] sm:grid-cols-[9rem_1fr_auto] items-center gap-2 sm:gap-3">
+        <span className="text-[11px] uppercase tracking-wider font-semibold text-ink/55">
+          Account Number
+        </span>
+        <span className="font-display-bn text-base sm:text-lg font-bold text-mango-700 tracking-wider break-all">
+          {acctNum || (
+            <span className="text-orange-700/70 italic text-xs font-normal">
+              সেট নেই — NEXT_PUBLIC_BANK_ACCOUNT_NUMBER add করুন
+            </span>
+          )}
+        </span>
+        {acctNum ? (
+          <button
+            type="button"
+            onClick={onCopyAccount}
+            className="grid place-items-center h-9 w-9 rounded-full bg-white border border-mango-300 hover:bg-mango-100 shrink-0"
+            aria-label="অ্যাকাউন্ট নম্বর কপি করুন"
+          >
+            <Copy className="h-4 w-4 text-mango-700" />
+          </button>
+        ) : (
+          <span aria-hidden className="w-9" />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function BankRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="grid grid-cols-[7.5rem_1fr] sm:grid-cols-[9rem_1fr] items-baseline gap-2 sm:gap-3">
+      <span className="text-[11px] uppercase tracking-wider font-semibold text-ink/55">
+        {label}
+      </span>
+      <span className="text-sm sm:text-base font-semibold text-ink break-words">
+        {value || <span className="text-ink/40 italic font-normal">—</span>}
+      </span>
     </div>
   );
 }

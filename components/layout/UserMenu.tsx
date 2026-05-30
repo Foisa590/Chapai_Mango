@@ -2,12 +2,25 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { LogIn, LogOut, Package, Shield } from "lucide-react";
+import { LogIn, LogOut, Package, Shield, UserPlus } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { signOutCustomerAction } from "@/app/actions/auth";
 import { formatBdPhone } from "@/lib/phone";
 
+/**
+ * User menu in the navbar.
+ *
+ * Logged out:
+ *   - Desktop:  text pills "সাইন ইন" + "সাইন আপ"
+ *   - Mobile:   compact icon-only buttons (sign-in + sign-up) so
+ *               the user never has to dig into the hamburger menu
+ *               to find auth.
+ *
+ * Logged in:
+ *   - Avatar circle (initial) opens a dropdown with profile,
+ *     orders, admin (if applicable), sign out.
+ */
 export default function UserMenu() {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -56,18 +69,35 @@ export default function UserMenu() {
     return () => document.removeEventListener("mousedown", onClick);
   }, [open]);
 
+  // ----- Logged out -----
   if (!user) {
     return (
-      <Link
-        href="/login"
-        className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-white/70 border border-mango-200 px-3.5 py-2 text-xs font-semibold text-mango-700 hover:bg-mango-100 transition"
-      >
-        <LogIn className="h-3.5 w-3.5" />
-        সাইন ইন
-      </Link>
+      <div className="flex items-center gap-1.5 sm:gap-2">
+        {/* Sign in: icon-only on mobile, text pill on sm+. Always
+            visible so the customer never has to open the hamburger
+            menu to find the auth entry point. */}
+        <Link
+          href="/login"
+          aria-label="সাইন ইন"
+          className="inline-flex items-center justify-center sm:gap-1.5 rounded-full bg-white/70 border border-mango-200 h-9 w-9 sm:w-auto sm:px-3.5 sm:py-2 text-xs font-semibold text-mango-700 hover:bg-mango-100 transition"
+        >
+          <LogIn className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+          <span className="hidden sm:inline">সাইন ইন</span>
+        </Link>
+        {/* Sign up: visible on sm+ only — keeps the mobile navbar
+            tight (sign-up is also reachable from the sign-in page). */}
+        <Link
+          href="/signup"
+          className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-mango-gradient px-3.5 py-2 text-xs font-semibold text-ink shadow-soft hover:scale-105 transition"
+        >
+          <UserPlus className="h-3.5 w-3.5" />
+          সাইন আপ
+        </Link>
+      </div>
     );
   }
 
+  // ----- Logged in -----
   const initial = (
     (user.user_metadata?.full_name as string | undefined)?.[0] ||
     user.email?.[0] ||

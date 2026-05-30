@@ -97,40 +97,36 @@ export function totalCartKg(items: { quantity_kg: number }[]): number {
 //
 // Every method has TWO env vars the operator can set on Railway:
 //
-//   NEXT_PUBLIC_<CODE>_NUMBER    receiving MFS number / bank account text
-//   NEXT_PUBLIC_<CODE>_ADVANCE   fixed amount the customer must pay UP
-//                                FRONT before the order ships (BDT)
+//   NEXT_PUBLIC_<CODE>_NUMBER    receiving MFS number (single-line)
+//   NEXT_PUBLIC_<CODE>_ADVANCE   fixed amount due up front (BDT)
 //
-// Examples:
-//   NEXT_PUBLIC_BKASH_NUMBER=01712345678
-//   NEXT_PUBLIC_BKASH_ADVANCE=200
-//
-//   NEXT_PUBLIC_BANK_NUMBER=DBBL · A/C 1234567890 · Branch X
-//   NEXT_PUBLIC_BANK_ADVANCE=0           (= full amount on transfer)
-//
-//   NEXT_PUBLIC_COD_ADVANCE=100          (booking deposit on COD)
-//
-// Rules for the resulting "amount to send now":
-//   * advance > 0          → advance (booking deposit, rest paid on
-//                            delivery if there is one)
-//   * cod with advance=0   → 0 (full amount paid in cash on delivery)
-//   * online with adv=0    → full order total (classic prepaid)
+// Bank is special — the customer expects FOUR distinct fields
+// (holder, bank, branch, account number), so we expose those as
+// separate env vars too. See `readBankInfo()` below.
 
 export type PaymentMethodInfo = {
   code: PaymentMethod;
   /** Bangla label shown on the checkout card. */
   label: string;
-  /** Receiving MFS number / bank account string from env. */
+  /**
+   * Single-line summary suitable for receipt rows / track-order
+   * displays. For MFS rails this is just the receiving number; for
+   * bank it's a "Holder · Bank · Branch · A/C" join.
+   */
   accountNumber: string;
   /** Fixed BDT amount required up front (0 = no advance). */
   advance: number;
   /** Free-form helper text shown under the selected card. */
   instructions: string;
+  /**
+   * Structured bank details, present ONLY when code === 'bank'.
+   * The checkout form uses this to render the four fields as a
+   * proper labelled block instead of one long string.
+   */
+  bankDetails?: BankAccountInfo;
 };
 
-/** Default labels + instructions per method. The operator can still
- *  override behaviour via the env-var pair above; only label+text are
- *  hard-coded so the UI stays Bangla and consistent. */
+/** Default labels + instructions per method. */
 const METHOD_DEFAULTS: Record<
   PaymentMethod,
   { label: string; instructions: string }
@@ -162,17 +158,14 @@ const METHOD_DEFAULTS: Record<
   bank: {
     label: "ব্যাংক ট্রান্সফার",
     instructions:
-      "উপরের অ্যাকাউন্টে ফান্ড ট্রান্সফার করুন এবং রেফারেন্স ফর্মে দিন।"
+      "এই অ্যাকাউন্টে ফান্ড ট্রান্সফার করুন এবং ট্রান্সফার রেফারেন্স ফর্মে দিন।"
   }
 };
 
-/** Read NEXT_PUBLIC_<CODE>_NUMBER for a method, with a per-code
- *  fallback so the older NEXT_PUBLIC_BKASH_NUMBER style env vars
- *  keep working if an operator hasn't touched them. */
+/** Read NEXT_PUBLIC_<CODE>_NUMBER for a method. Hard-coded refs (not
+ *  template-string lookups) because Next.js inlines NEXT_PUBLIC_*
+ *  at build time and dynamic keys wouldn't resolve. */
 function readNumber(code: PaymentMethod): string {
-  // Direct env-var pickup. Hard-coded refs (not template-string lookups)
-  // because Next.js inlines NEXT_PUBLIC_* at build time and dynamic keys
-  // wouldn't resolve.
   switch (code) {
     case "bkash":
       return (process.env.NEXT_PUBLIC_BKASH_NUMBER || "").trim();
@@ -183,6 +176,8 @@ function readNumber(code: PaymentMethod): string {
     case "upay":
       return (process.env.NEXT_PUBLIC_UPAY_NUMBER || "").trim();
     case "bank":
+      // Legacy single-line bank string. Used only as a fallback when
+      // the structured fields are all blank — see formatBankSummary().
       return (process.env.NEXT_PUBLIC_BANK_NUMBER || "").trim();
     default:
       return "";
@@ -208,9 +203,84 @@ function readAdvance(code: PaymentMethod): number {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────
+// Bank account — four structured env-var fields
+// ─────────────────────────────────────────────────────────────────
+// We split the bank info into Holder / Name / Branch / Account
+// because the operator switches accounts occasionally (different
+// banks for different seasons, etc.) and editing one field at a time
+// is cleaner than re-keying a single combined string.
+//
+// Defaults are seeded with the operator's current account so the
+// /checkout block renders meaningful info even before any env vars
+// are set on Railway. Account number is intentionally blank by
+// default — operator must fill it in before the bank option is
+// useful. The CheckoutForm shows a clear "set in env" hint when
+// the account number is empty.
+
+export type BankAccountInfo = {
+  /** Account holder name (e.g. "MD FOISAL IQBAL"). */
+  holder: string;
+  /** Bank name (e.g. "AB BANK"). */
+  bankName: string;
+  /** Branch (e.g. "RAJSHAHI"). */
+  branch: string;
+  /** Account number — digits + optional dashes. */
+  accountNumber: string;
+};
+
+/** Read the four structured bank fields from env, with sane defaults. */
+function readBankInfo(): BankAccountInfo {
+  return {
+    holder: (process.env.NEXT_PUBLIC_BANK_HOLDER || "MD FOISAL IQBAL").trim(),
+    bankName: (process.env.NEXT_PUBLIC_BANK_NAME || "AB BANK").trim(),
+    branch: (process.env.NEXT_PUBLIC_BANK_BRANCH || "RAJSHAHI").trim(),
+    accountNumber: (
+      process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER || ""
+    ).trim()
+  };
+}
+
+/**
+ * Format the structured bank info as a single string for places
+ * that don't have room for a 4-row block (track-order page,
+ * order receipt, etc.).
+ *
+ * Priority:
+ *   1. NEXT_PUBLIC_BANK_NUMBER if set (legacy single-line override)
+ *   2. Otherwise concat the four structured fields with " · "
+ *
+ * That ordering means an operator who already had
+ *   NEXT_PUBLIC_BANK_NUMBER="DBBL · A/C 1234567890 · Branch X"
+ * keeps that exact display until they delete the var and start
+ * using the structured fields.
+ */
+function formatBankSummary(info: BankAccountInfo): string {
+  const legacy = (process.env.NEXT_PUBLIC_BANK_NUMBER || "").trim();
+  if (legacy) return legacy;
+
+  const parts: string[] = [];
+  if (info.holder) parts.push(`Holder: ${info.holder}`);
+  if (info.bankName) parts.push(info.bankName);
+  if (info.branch) parts.push(`Branch: ${info.branch}`);
+  if (info.accountNumber) parts.push(`A/C: ${info.accountNumber}`);
+  return parts.join(" · ");
+}
+
 /** Full info bundle for a single payment method. */
 export function paymentMethodInfo(code: PaymentMethod): PaymentMethodInfo {
   const def = METHOD_DEFAULTS[code];
+  if (code === "bank") {
+    const bank = readBankInfo();
+    return {
+      code,
+      label: def.label,
+      accountNumber: formatBankSummary(bank),
+      advance: readAdvance(code),
+      instructions: def.instructions,
+      bankDetails: bank
+    };
+  }
   return {
     code,
     label: def.label,
