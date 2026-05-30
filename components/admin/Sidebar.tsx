@@ -12,6 +12,8 @@ import {
   Bell,
   Megaphone,
   Users,
+  CreditCard,
+  FileText,
   LogOut,
   Menu,
   X,
@@ -28,6 +30,8 @@ const NAV = [
   { href: "/admin/messages", label: "Messages", icon: MessageSquare },
   { href: "/admin/marquees", label: "Marquees", icon: Megaphone },
   { href: "/admin/team", label: "Team", icon: Users },
+  { href: "/admin/payment-methods", label: "Payments", icon: CreditCard },
+  { href: "/admin/refund-policy", label: "Refund Policy", icon: FileText },
   { href: "/admin/notifications", label: "Notifications", icon: Bell }
 ];
 

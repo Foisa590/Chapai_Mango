@@ -487,3 +487,168 @@ export async function toggleTeamMemberAction(
   revalidatePath("/team");
   return { ok: true };
 }
+
+
+
+
+// ----- Payment methods (admin manage) -----
+
+import type { PaymentIconKey } from "@/types";
+
+export type PaymentMethodInput = {
+  code: string;
+  label: string;
+  account_number: string;
+  advance_amount: number;
+  instructions: string;
+  icon_key: PaymentIconKey;
+  is_active: boolean;
+  sort_order: number;
+};
+
+const VALID_ICON_KEYS: PaymentIconKey[] = [
+  "cod",
+  "bkash",
+  "nagad",
+  "rocket",
+  "upay",
+  "bank",
+  "generic"
+];
+
+const CODE_PATTERN = /^[a-z][a-z0-9_]{1,30}$/;
+
+function sanitisePaymentMethod(input: PaymentMethodInput) {
+  const code = (input.code || "").trim().toLowerCase();
+  if (!CODE_PATTERN.test(code)) {
+    return {
+      error:
+        "Code must start with a-z, 2-31 chars, and only contain a-z, 0-9, _"
+    };
+  }
+
+  const label = (input.label || "").trim();
+  if (!label) return { error: "Label cannot be empty" };
+  if (label.length > 80) return { error: "Label too long (max 80 chars)" };
+
+  const advance = Number(input.advance_amount);
+  if (!Number.isFinite(advance) || advance < 0) {
+    return { error: "Advance amount must be 0 or a positive number" };
+  }
+  if (advance > 1_000_000) {
+    return { error: "Advance amount looks suspiciously large" };
+  }
+
+  const icon: PaymentIconKey = VALID_ICON_KEYS.includes(input.icon_key)
+    ? input.icon_key
+    : "generic";
+
+  return {
+    payload: {
+      code,
+      label,
+      account_number: (input.account_number || "").trim().slice(0, 200),
+      advance_amount: Math.floor(advance),
+      instructions: (input.instructions || "").trim().slice(0, 1000),
+      icon_key: icon,
+      is_active: !!input.is_active,
+      sort_order: Number.isFinite(Number(input.sort_order))
+        ? Math.max(0, Math.floor(Number(input.sort_order)))
+        : 0
+    }
+  };
+}
+
+export async function upsertPaymentMethodAction(
+  input: PaymentMethodInput,
+  methodId?: string
+) {
+  if (!isSupabaseConfigured()) {
+    return { error: "Supabase not configured" };
+  }
+  const result = sanitisePaymentMethod(input);
+  if ("error" in result) return { error: result.error };
+
+  const supabase = createClient();
+  if (methodId) {
+    const { error } = await supabase
+      .from("payment_methods")
+      .update(result.payload)
+      .eq("id", methodId);
+    if (error) return { error: error.message };
+  } else {
+    const { error } = await supabase
+      .from("payment_methods")
+      .insert(result.payload);
+    if (error) return { error: error.message };
+  }
+
+  revalidatePath("/admin/payment-methods");
+  revalidatePath("/checkout");
+  // Footer also renders the method icon strip via getActivePaymentMethods
+  revalidatePath("/");
+  return { ok: true };
+}
+
+export async function togglePaymentMethodAction(
+  methodId: string,
+  isActive: boolean
+) {
+  if (!isSupabaseConfigured()) {
+    return { error: "Supabase not configured" };
+  }
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("payment_methods")
+    .update({ is_active: isActive })
+    .eq("id", methodId);
+  if (error) return { error: error.message };
+  revalidatePath("/admin/payment-methods");
+  revalidatePath("/checkout");
+  revalidatePath("/");
+  return { ok: true };
+}
+
+export async function deletePaymentMethodAction(methodId: string) {
+  if (!isSupabaseConfigured()) {
+    return { error: "Supabase not configured" };
+  }
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("payment_methods")
+    .delete()
+    .eq("id", methodId);
+  if (error) return { error: error.message };
+  revalidatePath("/admin/payment-methods");
+  revalidatePath("/checkout");
+  revalidatePath("/");
+  return { ok: true };
+}
+
+
+// ----- Refund policy (admin edit) -----
+
+export async function updateRefundPolicyAction(bodyMd: string) {
+  if (!isSupabaseConfigured()) {
+    return { error: "Supabase not configured" };
+  }
+  const trimmed = (bodyMd || "").trim();
+  if (!trimmed) return { error: "Policy text cannot be empty" };
+  if (trimmed.length > 50_000) {
+    return { error: "Policy text too long (max 50,000 chars)" };
+  }
+
+  const supabase = createClient();
+
+  // Single-row table — upsert into id=1 so the admin can save even
+  // when the migration's seed insert was skipped (e.g. ON CONFLICT
+  // hit a different id on a hand-edited DB).
+  const { error } = await supabase
+    .from("refund_policy")
+    .upsert({ id: 1, body_md: trimmed }, { onConflict: "id" });
+  if (error) return { error: error.message };
+
+  revalidatePath("/admin/refund-policy");
+  revalidatePath("/refund");
+  return { ok: true };
+}

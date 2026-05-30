@@ -216,3 +216,45 @@ export async function fetchAdminTeamMembers() {
     .order("created_at", { ascending: false });
   return (data || []) as AdminTeamMember[];
 }
+
+
+
+
+// ----- Payment methods (admin) -----
+
+import type { PaymentMethodConfig, RefundPolicy } from "@/types";
+
+export type AdminPaymentMethod = PaymentMethodConfig;
+
+/**
+ * Admin lists ALL methods including hidden/inactive ones, so
+ * they can re-enable a hidden method without re-creating it.
+ */
+export async function fetchAdminPaymentMethods() {
+  if (!isSupabaseConfigured()) return [] as AdminPaymentMethod[];
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("payment_methods")
+    .select("*")
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+  return (data || []) as AdminPaymentMethod[];
+}
+
+
+// ----- Refund policy (admin) -----
+
+export async function fetchRefundPolicy(): Promise<RefundPolicy | null> {
+  if (!isSupabaseConfigured()) return null;
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("refund_policy")
+    .select("body_md, updated_at")
+    .eq("id", 1)
+    .maybeSingle();
+  if (!data) return null;
+  return {
+    body_md: data.body_md || "",
+    updated_at: data.updated_at || ""
+  };
+}

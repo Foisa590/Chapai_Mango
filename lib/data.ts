@@ -485,3 +485,202 @@ export async function getActiveTeamMembers(): Promise<TeamMember[]> {
     return MOCK_TEAM;
   }
 }
+
+
+
+
+// ----- Payment methods -----
+
+import type {
+  PaymentMethodConfig,
+  PaymentIconKey,
+  RefundPolicy
+} from "@/types";
+
+/**
+ * Hard-coded fallback used when Supabase isn't configured (dev) OR
+ * the migration hasn't been run yet. Mirrors the seed inserts in
+ * supabase/payment-methods.sql so /checkout still renders a sensible
+ * payment list out of the box.
+ *
+ * Account numbers are intentionally blank so the public site falls
+ * through to the legacy NEXT_PUBLIC_BKASH_NUMBER / _NAGAD_NUMBER /
+ * _ROCKET_NUMBER env vars on first deploy. The admin panel
+ * overrides these once the operator fills them in.
+ */
+const MOCK_PAYMENT_METHODS: PaymentMethodConfig[] = [
+  {
+    id: "pm-cod",
+    code: "cod",
+    label: "ক্যাশ অন ডেলিভারি",
+    account_number: "",
+    advance_amount: 0,
+    instructions: "পণ্য পেয়ে কুরিয়ারের কাছে নগদ পরিশোধ করুন।",
+    icon_key: "cod",
+    is_active: true,
+    sort_order: 10,
+    created_at: "",
+    updated_at: ""
+  },
+  {
+    id: "pm-bkash",
+    code: "bkash",
+    label: "bKash",
+    account_number: "",
+    advance_amount: 0,
+    instructions:
+      "উপরের নম্বরে Send Money করুন → TrxID + sender number ফর্মে দিন।",
+    icon_key: "bkash",
+    is_active: true,
+    sort_order: 20,
+    created_at: "",
+    updated_at: ""
+  },
+  {
+    id: "pm-nagad",
+    code: "nagad",
+    label: "Nagad",
+    account_number: "",
+    advance_amount: 0,
+    instructions:
+      "উপরের নম্বরে Send Money করুন → TrxID + sender number ফর্মে দিন।",
+    icon_key: "nagad",
+    is_active: true,
+    sort_order: 30,
+    created_at: "",
+    updated_at: ""
+  },
+  {
+    id: "pm-rocket",
+    code: "rocket",
+    label: "Rocket",
+    account_number: "",
+    advance_amount: 0,
+    instructions:
+      "উপরের নম্বরে Send Money করুন → TrxID + sender number ফর্মে দিন।",
+    icon_key: "rocket",
+    is_active: true,
+    sort_order: 40,
+    created_at: "",
+    updated_at: ""
+  },
+  {
+    id: "pm-upay",
+    code: "upay",
+    label: "Upay",
+    account_number: "",
+    advance_amount: 0,
+    instructions:
+      "উপরের Upay নম্বরে Send Money করুন → TrxID + sender number ফর্মে দিন।",
+    icon_key: "upay",
+    is_active: true,
+    sort_order: 50,
+    created_at: "",
+    updated_at: ""
+  },
+  {
+    id: "pm-bank",
+    code: "bank",
+    label: "ব্যাংক ট্রান্সফার",
+    account_number: "",
+    advance_amount: 0,
+    instructions:
+      "এই অ্যাকাউন্টে ফান্ড ট্রান্সফার করুন এবং ট্রান্সফার রেফারেন্স ফর্মে দিন।",
+    icon_key: "bank",
+    is_active: true,
+    sort_order: 60,
+    created_at: "",
+    updated_at: ""
+  }
+];
+
+/**
+ * Map a row's icon_key string into the PaymentIconKey union.
+ * Falls back to "generic" so admins can introduce new methods
+ * without crashing the UI.
+ */
+function normaliseIconKey(raw: string | null | undefined): PaymentIconKey {
+  const allowed: PaymentIconKey[] = [
+    "cod",
+    "bkash",
+    "nagad",
+    "rocket",
+    "upay",
+    "bank",
+    "generic"
+  ];
+  return allowed.includes(raw as PaymentIconKey)
+    ? (raw as PaymentIconKey)
+    : "generic";
+}
+
+/**
+ * Active payment methods for /checkout, ordered by sort_order.
+ *
+ * On the public site, the operator's NEXT_PUBLIC_BKASH_NUMBER /
+ * _NAGAD_NUMBER / _ROCKET_NUMBER env vars are STILL honoured as
+ * a fallback when account_number is blank — so the migration can
+ * be deployed without immediately filling in numbers.
+ *
+ * Falls back to MOCK_PAYMENT_METHODS when:
+ *   - Supabase isn't configured (dev environment)
+ *   - The migration hasn't been run yet (table missing)
+ *   - The query errors for any other reason
+ */
+export async function getActivePaymentMethods(): Promise<
+  PaymentMethodConfig[]
+> {
+  try {
+    const { isSupabaseConfigured, createClient } = await import(
+      "@/lib/supabase/server"
+    );
+    if (!isSupabaseConfigured()) return MOCK_PAYMENT_METHODS;
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("payment_methods")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
+    if (error || !data || data.length === 0) return MOCK_PAYMENT_METHODS;
+    return (data as PaymentMethodConfig[]).map((m) => ({
+      ...m,
+      icon_key: normaliseIconKey(m.icon_key)
+    }));
+  } catch {
+    return MOCK_PAYMENT_METHODS;
+  }
+}
+
+
+// ----- Refund policy -----
+
+const MOCK_REFUND_POLICY: RefundPolicy = {
+  body_md:
+    "## রিফান্ড ও রিটার্ন পলিসি\n\n" +
+    "এই পেজটি admin panel থেকে এডিট করুন। পণ্য পাওয়ার ২৪ ঘণ্টার " +
+    "মধ্যে অভিযোগ জানালে আমরা যাচাই করে রিফান্ড / রিপ্লেসমেন্ট দিয়ে " +
+    "থাকি — বিস্তারিত জানতে কন্ট্যাক্ট পেজে যোগাযোগ করুন।",
+  updated_at: ""
+};
+
+export async function getRefundPolicy(): Promise<RefundPolicy> {
+  try {
+    const { isSupabaseConfigured, createClient } = await import(
+      "@/lib/supabase/server"
+    );
+    if (!isSupabaseConfigured()) return MOCK_REFUND_POLICY;
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("refund_policy")
+      .select("body_md, updated_at")
+      .eq("id", 1)
+      .maybeSingle();
+    if (error || !data) return MOCK_REFUND_POLICY;
+    return {
+      body_md: data.body_md || MOCK_REFUND_POLICY.body_md,
+      updated_at: data.updated_at || ""
+    };
+  } catch {
+    return MOCK_REFUND_POLICY;
+  }
+}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Facebook, Mail, MapPin, Phone } from "lucide-react";
+import AcceptedPayments from "@/components/social/AcceptedPayments";
 
 // Inline TikTok logo (lucide doesn't ship one)
 function TikTokIcon({ className }: { className?: string }) {
@@ -116,6 +117,11 @@ export default function Footer() {
                 প্রাইভেসি পলিসি
               </Link>
             </li>
+            <li>
+              <Link href="/refund" className="hover:text-mango-700">
+                রিফান্ড পলিসি
+              </Link>
+            </li>
           </ul>
         </div>
 
@@ -141,6 +147,8 @@ export default function Footer() {
           </ul>
         </div>
       </div>
+
+      <AcceptedPayments />
 
       <div className="border-t border-mango-200/50">
         <div className="container-x py-5 flex flex-wrap items-center justify-between gap-3 text-xs text-ink/60">
