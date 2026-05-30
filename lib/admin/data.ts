@@ -1,5 +1,5 @@
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
-import type { Order, Mango } from "@/types";
+import type { Order, Mango, RefundPolicy, TeamMember } from "@/types";
 
 export type AdminOrder = Order & { id: string; created_at: string };
 export type AdminProduct = Mango;
@@ -202,8 +202,6 @@ export async function fetchAdminMarquees() {
 
 // ----- Team members -----
 
-import type { TeamMember } from "@/types";
-
 export type AdminTeamMember = TeamMember;
 
 export async function fetchAdminTeamMembers() {
@@ -215,30 +213,6 @@ export async function fetchAdminTeamMembers() {
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: false });
   return (data || []) as AdminTeamMember[];
-}
-
-
-
-
-// ----- Payment methods (admin) -----
-
-import type { PaymentMethodConfig, RefundPolicy } from "@/types";
-
-export type AdminPaymentMethod = PaymentMethodConfig;
-
-/**
- * Admin lists ALL methods including hidden/inactive ones, so
- * they can re-enable a hidden method without re-creating it.
- */
-export async function fetchAdminPaymentMethods() {
-  if (!isSupabaseConfigured()) return [] as AdminPaymentMethod[];
-  const supabase = createClient();
-  const { data } = await supabase
-    .from("payment_methods")
-    .select("*")
-    .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: true });
-  return (data || []) as AdminPaymentMethod[];
 }
 
 

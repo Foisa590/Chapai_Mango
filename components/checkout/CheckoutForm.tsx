@@ -7,20 +7,20 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import toast from "react-hot-toast";
-import {
-  CheckCircle2,
-  Copy,
-  Banknote,
-  Smartphone,
-  Building2,
-  CreditCard,
-  Loader2
-} from "lucide-react";
+import { CheckCircle2, Copy, Loader2 } from "lucide-react";
 import { useCart } from "@/store/cart-store";
 import { formatBDT } from "@/lib/utils";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
-import { calcDeliveryFee, config as siteConfig } from "@/lib/config";
-import type { PaymentMethodConfig } from "@/types";
+import {
+  amountToSendNow,
+  calcDeliveryFee,
+  config as siteConfig,
+  defaultPaymentMethod,
+  getEnabledPaymentMethodsInfo,
+  paymentMethodInfo
+} from "@/lib/config";
+import PaymentBrandLogo from "@/components/payment/PaymentBrandLogo";
+import type { PaymentMethod } from "@/types";
 import type { User } from "@supabase/supabase-js";
 
 const DISTRICTS = [
@@ -36,10 +36,15 @@ const DISTRICTS = [
   "Other"
 ];
 
-// We accept any non-empty string for payment_method server-side so the
-// admin can introduce new methods (Upay, bank-transfer, future rails)
-// from /admin/payment-methods without a code change. The client-side
-// PaymentMethod options list is provided by the server component.
+const PAYMENT_METHOD_VALUES = [
+  "cod",
+  "bkash",
+  "nagad",
+  "rocket",
+  "upay",
+  "bank"
+] as const;
+
 const schema = z
   .object({
     customer_name: z.string().min(2, "আপনার নাম লিখুন"),
@@ -48,90 +53,65 @@ const schema = z
     district: z.string().min(2, "জেলা নির্বাচন করুন"),
     address: z.string().min(8, "সম্পূর্ণ ঠিকানা লিখুন"),
     notes: z.string().optional(),
-    payment_method: z.string().min(1, "পেমেন্ট পদ্ধতি নির্বাচন করুন"),
+    payment_method: z.enum(PAYMENT_METHOD_VALUES),
     payment_txn_id: z.string().optional(),
     payment_sender_number: z.string().optional()
+  })
+  .refine(
+    (data) => siteConfig.paymentMethods.includes(data.payment_method),
+    {
+      message: "এই পেমেন্ট পদ্ধতি বর্তমানে চালু নেই",
+      path: ["payment_method"]
+    }
+  )
+  .superRefine((data, ctx) => {
+    // If the chosen method needs an up-front payment, both TrxID and
+    // sender-number must be present. We can't know `total` here so we
+    // approximate with "anything that isn't COD-with-zero-advance" —
+    // for COD with advance>0 the customer sent money via some other
+    // rail, so they have a TrxID to enter.
+    const info = paymentMethodInfo(data.payment_method);
+    const needsProof =
+      info.advance > 0 || (data.payment_method !== "cod");
+    if (!needsProof) return;
+    if (!data.payment_txn_id?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["payment_txn_id"],
+        message: "Transaction ID দিন"
+      });
+    }
+    if (!data.payment_sender_number?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["payment_sender_number"],
+        message: "যে নম্বর/অ্যাকাউন্ট থেকে পাঠিয়েছেন সেটা দিন"
+      });
+    }
   });
 
 type FormValues = z.infer<typeof schema>;
 
-/** Map an icon_key to a lucide component. */
-function iconForKey(key: string) {
-  switch (key) {
-    case "cod":
-      return Banknote;
-    case "bkash":
-    case "nagad":
-    case "rocket":
-    case "upay":
-      return Smartphone;
-    case "bank":
-      return Building2;
-    default:
-      return CreditCard;
-  }
-}
-
-/**
- * Get the receiving number / bank account string for a method.
- *
- * Priority:
- *   1. method.account_number from the DB (admin-managed)
- *   2. Legacy NEXT_PUBLIC_<CODE>_NUMBER env vars for built-in
- *      codes — kept so existing deployments keep working until
- *      admin fills in the new field.
- *   3. Empty string — caller will show a "not configured" hint.
- */
-function getReceivingNumber(method: PaymentMethodConfig): string {
-  if (method.account_number?.trim()) return method.account_number.trim();
-  const fallback: Record<string, string | undefined> = {
-    bkash: process.env.NEXT_PUBLIC_BKASH_NUMBER,
-    nagad: process.env.NEXT_PUBLIC_NAGAD_NUMBER,
-    rocket: process.env.NEXT_PUBLIC_ROCKET_NUMBER
-  };
-  return fallback[method.code]?.trim() || "";
-}
-
-/**
- * How much the customer has to pay RIGHT NOW via the selected
- * method. The remainder (if any) is paid on delivery.
- *
- * Rules:
- *   - COD with advance=0  -> 0 (full amount on delivery)
- *   - advance > 0         -> advance (booking deposit)
- *   - online with adv=0   -> full order total (classic prepaid)
- */
-function amountToSendNow(
-  method: PaymentMethodConfig,
-  total: number
-): number {
-  if (method.advance_amount > 0) return method.advance_amount;
-  if (method.code === "cod") return 0;
-  return total;
-}
-
-export default function CheckoutForm({
-  paymentMethods
-}: {
-  paymentMethods: PaymentMethodConfig[];
-}) {
+export default function CheckoutForm() {
   const router = useRouter();
   const items = useCart((s) => s.items);
   const subtotal = useCart((s) => s.subtotal());
   const clear = useCart((s) => s.clear);
   const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState<{
-    id?: string;
-    methodLabel?: string;
-  } | null>(null);
+  const [done, setDone] = useState<{ id?: string; methodLabel?: string } | null>(
+    null
+  );
   const [user, setUser] = useState<User | null>(null);
 
   const deliveryFee = calcDeliveryFee(subtotal);
   const total = subtotal + deliveryFee;
 
-  // Default selection: first active method, or "cod" as a last resort
-  // for the (extremely unlikely) case the admin disabled everything.
-  const defaultMethodCode = paymentMethods[0]?.code || "cod";
+  // The full list of methods the operator has enabled, with their
+  // configured number + advance + label. Render order is the order
+  // returned by `getEnabledPaymentMethodsInfo()`, which mirrors the
+  // operator's NEXT_PUBLIC_PAYMENT_METHODS env var (or the built-in
+  // default `cod, bkash, nagad, rocket, upay, bank`).
+  const methods = useMemo(() => getEnabledPaymentMethodsInfo(), []);
 
   const {
     register,
@@ -142,12 +122,11 @@ export default function CheckoutForm({
     formState: { errors }
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { payment_method: defaultMethodCode }
+    defaultValues: { payment_method: defaultPaymentMethod() }
   });
 
   // Pull the signed-in user (server already redirected unauthed visitors
-  // to /login). Pre-fill name/phone from sign-up metadata. Phone-only
-  // users have u.email = null, so we fall back to user_metadata.email.
+  // to /login). Pre-fill name/phone from sign-up metadata.
   useEffect(() => {
     if (!isSupabaseConfigured()) return;
     const supabase = createClient();
@@ -172,22 +151,16 @@ export default function CheckoutForm({
     });
   }, [reset]);
 
-  const selectedCode = watch("payment_method");
-  const selectedMethod = useMemo(
-    () =>
-      paymentMethods.find((m) => m.code === selectedCode) ?? paymentMethods[0],
-    [paymentMethods, selectedCode]
+  const selectedCode = watch("payment_method") as PaymentMethod;
+  const selectedInfo = useMemo(
+    () => methods.find((m) => m.code === selectedCode) ?? methods[0],
+    [methods, selectedCode]
   );
 
-  // What the customer actually needs to send right now via this method.
-  // 0 means "nothing to send up front" (i.e. classic COD).
-  const sendNow = selectedMethod
-    ? amountToSendNow(selectedMethod, total)
-    : 0;
-
-  const receivingNumber = selectedMethod
-    ? getReceivingNumber(selectedMethod)
-    : "";
+  // What the customer actually has to send up front for the chosen
+  // method. 0 = classic COD (pay full on delivery, no TrxID needed).
+  const sendNow = selectedInfo ? amountToSendNow(selectedInfo, total) : 0;
+  const receivingNumber = selectedInfo?.accountNumber || "";
 
   const onSubmit = async (values: FormValues) => {
     if (items.length === 0) {
@@ -195,8 +168,6 @@ export default function CheckoutForm({
       router.push("/products");
       return;
     }
-
-    // Min-kg gate.
     const totalKg = items.reduce((s, i) => s + (i.quantity_kg || 0), 0);
     if (siteConfig.minOrderKg > 0 && totalKg < siteConfig.minOrderKg) {
       toast.error(
@@ -205,29 +176,6 @@ export default function CheckoutForm({
       router.push("/cart");
       return;
     }
-
-    // Method must be one we actually surfaced.
-    const method = paymentMethods.find((m) => m.code === values.payment_method);
-    if (!method) {
-      toast.error("এই পেমেন্ট পদ্ধতি বর্তমানে চালু নেই");
-      return;
-    }
-
-    // If this method requires sending money up front, TrxID + sender
-    // are both mandatory. We do this server-side too, but a friendly
-    // client-side check beats a generic submission failure.
-    const requiresProof = amountToSendNow(method, total) > 0;
-    if (requiresProof) {
-      if (!values.payment_txn_id?.trim()) {
-        toast.error("Transaction ID দিন");
-        return;
-      }
-      if (!values.payment_sender_number?.trim()) {
-        toast.error("যে নম্বর থেকে পাঠিয়েছেন সেটা দিন");
-        return;
-      }
-    }
-
     if (isSupabaseConfigured() && !user) {
       toast.error("অর্ডার করতে সাইন ইন করুন");
       router.push("/login?next=/checkout");
@@ -251,7 +199,7 @@ export default function CheckoutForm({
         subtotal,
         delivery_fee: deliveryFee,
         total,
-        payment_method: method.code,
+        payment_method: values.payment_method,
         payment_txn_id: values.payment_txn_id || null,
         payment_sender_number: values.payment_sender_number || null,
         notes: values.notes || null,
@@ -274,7 +222,7 @@ export default function CheckoutForm({
       }
 
       clear();
-      setDone({ id, methodLabel: method.label });
+      setDone({ id, methodLabel: selectedInfo?.label });
       toast.success("অর্ডার কনফার্ম! ধন্যবাদ।");
     } catch (err) {
       console.error("[checkout] order insert failed:", err);
@@ -339,7 +287,7 @@ export default function CheckoutForm({
     );
   }
 
-  if (paymentMethods.length === 0) {
+  if (methods.length === 0) {
     return (
       <div className="glass rounded-3xl p-14 text-center">
         <p className="text-ink/60">
@@ -414,16 +362,15 @@ export default function CheckoutForm({
 
         {/* Payment */}
         <Card title="পেমেন্ট পদ্ধতি">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {paymentMethods.map((m) => {
-              const Icon = iconForKey(m.icon_key);
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3">
+            {methods.map((m) => {
               const active = selectedCode === m.code;
               return (
                 <label
-                  key={m.id}
+                  key={m.code}
                   className={`relative cursor-pointer rounded-2xl border-2 p-3 sm:p-4 text-center transition ${
                     active
-                      ? "border-mango-500 bg-mango-100 shadow-glow"
+                      ? "border-mango-500 bg-mango-50 shadow-glow"
                       : "border-mango-200 bg-white hover:border-mango-300"
                   }`}
                 >
@@ -432,29 +379,27 @@ export default function CheckoutForm({
                     value={m.code}
                     {...register("payment_method")}
                     onChange={(e) => {
-                      setValue("payment_method", e.target.value, {
-                        shouldValidate: true
-                      });
-                      // Clear stale TrxID/sender when switching methods so
-                      // a hidden value can't leak into the next submit.
+                      setValue(
+                        "payment_method",
+                        e.target.value as PaymentMethod,
+                        { shouldValidate: true }
+                      );
+                      // Clear stale TrxID/sender when switching methods so a
+                      // hidden value can't leak into the next submit.
                       setValue("payment_txn_id", "");
                       setValue("payment_sender_number", "");
                     }}
                     className="sr-only"
                   />
-                  <div
-                    className={`mx-auto mb-1.5 grid place-items-center h-9 w-9 rounded-xl ${
-                      active ? "bg-mango-gradient" : "bg-mango-100"
-                    }`}
-                  >
-                    <Icon className="h-5 w-5" />
+                  <div className="flex justify-center mb-2">
+                    <PaymentBrandLogo code={m.code} size="md" />
                   </div>
-                  <div className="font-semibold text-xs sm:text-sm leading-tight">
+                  <div className="font-semibold text-xs sm:text-sm leading-tight text-ink/80">
                     {m.label}
                   </div>
-                  {m.advance_amount > 0 && (
-                    <div className="text-[10px] text-mango-700 mt-0.5">
-                      Advance {formatBDT(m.advance_amount)}
+                  {m.advance > 0 && (
+                    <div className="text-[10px] text-mango-700 font-bold mt-1">
+                      Advance {formatBDT(m.advance)}
                     </div>
                   )}
                 </label>
@@ -462,16 +407,19 @@ export default function CheckoutForm({
             })}
           </div>
 
-          {selectedMethod && (
+          {selectedInfo && (
             <div className="mt-5 rounded-2xl border-2 border-dashed border-mango-300 bg-mango-50 p-5">
-              <p className="text-sm font-semibold text-ink">
-                {selectedMethod.label}
-              </p>
+              <div className="flex items-center gap-2 mb-3 flex-wrap">
+                <PaymentBrandLogo code={selectedInfo.code} size="sm" />
+                <span className="text-sm font-semibold text-ink">
+                  {selectedInfo.label}
+                </span>
+              </div>
 
               {sendNow > 0 ? (
                 <>
-                  <p className="text-sm text-ink/80 mt-2">
-                    {selectedMethod.code === "bank" ? (
+                  <p className="text-sm text-ink/80">
+                    {selectedInfo.code === "bank" ? (
                       <>
                         <strong>{formatBDT(sendNow)}</strong> এই অ্যাকাউন্টে
                         ট্রান্সফার করুন:
@@ -486,8 +434,8 @@ export default function CheckoutForm({
                   <div className="flex items-center gap-2 mt-2 mb-3 flex-wrap">
                     <span className="font-display-bn text-xl sm:text-2xl font-bold text-mango-700 tracking-wider break-all">
                       {receivingNumber || (
-                        <span className="text-orange-700/70 italic">
-                          নম্বর সেট নেই
+                        <span className="text-orange-700/70 italic text-sm">
+                          নম্বর/অ্যাকাউন্ট সেট নেই — env-এ যোগ করুন
                         </span>
                       )}
                     </span>
@@ -503,22 +451,19 @@ export default function CheckoutForm({
                     )}
                   </div>
 
-                  {selectedMethod.advance_amount > 0 &&
-                    selectedMethod.advance_amount < total && (
-                      <p className="text-xs text-ink/60 mb-3">
-                        বাকি{" "}
-                        <strong>
-                          {formatBDT(total - selectedMethod.advance_amount)}
-                        </strong>{" "}
-                        পণ্য পেয়ে দিন।
-                      </p>
-                    )}
-
-                  {selectedMethod.instructions && (
-                    <p className="text-xs text-ink/60 mb-4 whitespace-pre-line">
-                      {selectedMethod.instructions}
+                  {selectedInfo.advance > 0 && selectedInfo.advance < total && (
+                    <p className="text-xs text-ink/60 mb-3">
+                      বাকি{" "}
+                      <strong>
+                        {formatBDT(total - selectedInfo.advance)}
+                      </strong>{" "}
+                      পণ্য পেয়ে দিন।
                     </p>
                   )}
+
+                  <p className="text-xs text-ink/60 mb-4">
+                    {selectedInfo.instructions}
+                  </p>
 
                   <div className="grid sm:grid-cols-2 gap-4">
                     <Field
@@ -531,7 +476,10 @@ export default function CheckoutForm({
                         placeholder="যেমন: 9A1B2C3D4E"
                       />
                     </Field>
-                    <Field label="যে নম্বর/অ্যাকাউন্ট থেকে পাঠিয়েছেন *">
+                    <Field
+                      label="যে নম্বর/অ্যাকাউন্ট থেকে পাঠিয়েছেন *"
+                      error={errors.payment_sender_number?.message}
+                    >
                       <input
                         {...register("payment_sender_number")}
                         className="input-field"
@@ -542,9 +490,8 @@ export default function CheckoutForm({
                 </>
               ) : (
                 // COD with no advance — nothing to send up front.
-                <p className="text-sm text-ink/70 mt-2">
-                  {selectedMethod.instructions ||
-                    "পণ্য পেয়ে কুরিয়ারের কাছে নগদ পরিশোধ করুন।"}
+                <p className="text-sm text-ink/70">
+                  {selectedInfo.instructions}
                 </p>
               )}
             </div>
