@@ -4,6 +4,7 @@ import { Inter, Hind_Siliguri } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import SiteShell from "@/components/layout/SiteShell";
 import TopMarquee from "@/components/promo/TopMarquee";
+import Footer from "@/components/layout/Footer";
 import { getSiteUrl, SITE } from "@/lib/site";
 import "./globals.css";
 
@@ -118,17 +119,19 @@ export const metadata: Metadata = {
   },
   // Search Console / Bing Webmaster verification.
   //
-  // These tokens are NOT secrets — Google literally generates them so they
-  // can be embedded in public HTML. Hard-coding avoids the NEXT_PUBLIC_*
-  // build-time gotcha where adding the env var to Railway after the build
-  // does nothing until the next rebuild.
+  // We previously hard-coded a Google verification token as a fallback,
+  // but that was tied to the old chapaimango-production.up.railway.app
+  // property and Google flagged it as duplicate when the operator
+  // re-verified the new custom domain (dealhub2026.shop) via the more
+  // reliable DNS TXT method. DNS TXT lives entirely in the registrar
+  // DNS zone and never expires, so we no longer need a meta-tag fallback.
   //
-  // Env vars still take precedence (so future tokens / Bing / replatforms
-  // can be done without a code change), but we ship a working default.
+  // The NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION env var is still honoured
+  // — set it in Railway if you ever want to re-enable HTML-tag
+  // verification on top of the DNS TXT (Google accepts multiple
+  // verification methods on the same property).
   verification: {
-    google:
-      process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ??
-      "8UYqw1dQn90ujGaBBsXBh5_fXnefaXOHOC9wCyLvA3Q",
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
     other: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
       ? { "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION }
       : undefined
@@ -165,6 +168,7 @@ export default function RootLayout({
               <TopMarquee />
             </Suspense>
           }
+          footer={<Footer />}
         >
           {children}
         </SiteShell>

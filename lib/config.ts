@@ -12,7 +12,9 @@ const ALL_PAYMENT_METHODS: PaymentMethod[] = [
   "cod",
   "bkash",
   "nagad",
-  "rocket"
+  "rocket",
+  "upay",
+  "bank"
 ];
 
 const DEFAULT_DELIVERY_FEE = 120;
